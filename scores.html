@@ -600,6 +600,9 @@
     .history-team.right { text-align: center; }
   }
 </style>
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
 </head>
 <body>
 
@@ -745,22 +748,51 @@ const SCHEDULE = [
 ];
 
 // ══════════════════════════════════════════════
-//  STORAGE
+//  FIREBASE CONFIG — fill in your project values
 // ══════════════════════════════════════════════
-const RESULTS_KEY = 'pcl_results';
+const firebaseConfig = {
+  apiKey:            "AIzaSyBeXELSbgnDbLCIUGeB1hSdmOFKbs-KorI",
+  authDomain:        "piccornhole.firebaseapp.com",
+  databaseURL:       "https://piccornhole-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId:         "piccornhole",
+  storageBucket:     "piccornhole.firebasestorage.app",
+  messagingSenderId: "1005077269160",
+  appId:             "1:1005077269160:web:d724b5f66eeb44145a109d"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+// ══════════════════════════════════════════════
+//  STORAGE (Firebase-backed with local cache)
+// ══════════════════════════════════════════════
+let _resultsCache = [];
+let _rostersCache = {};
+let _firebaseReady = false;
+
+// Listen for real-time updates
+db.ref('results').on('value', (snap) => {
+  _resultsCache = snap.val() || [];
+  _firebaseReady = true;
+  // Re-render standings & history if visible
+  if (document.querySelector('#tab-standings.active')) renderStandings();
+  if (document.querySelector('#tab-history.active')) renderHistory();
+  // Update match preview (in case result was added from another device)
+  updatePreview();
+});
+
+db.ref('rosters').on('value', (snap) => {
+  _rostersCache = snap.val() || {};
+});
+
 function loadResults() {
-  try { return JSON.parse(localStorage.getItem(RESULTS_KEY)) || []; }
-  catch { return []; }
+  return _resultsCache;
 }
 function saveResults(data) {
-  localStorage.setItem(RESULTS_KEY, JSON.stringify(data));
+  _resultsCache = data;
+  db.ref('results').set(data);
 }
-
-// ── ROSTER STORAGE ──
-const ROSTERS_KEY = 'pcl_rosters';
 function loadRosters() {
-  try { return JSON.parse(localStorage.getItem(ROSTERS_KEY)) || {}; }
-  catch { return {}; }
+  return _rostersCache;
 }
 
 // ══════════════════════════════════════════════
