@@ -817,7 +817,7 @@ function populateWeeks() {
   SCHEDULE.forEach(s => {
     const opt = document.createElement('option');
     opt.value = s.wk;
-    opt.textContent = `Wk ${s.wk} — ${s.date}`;
+    opt.textContent = `Week ${s.wk} — ${s.date}`;
     sel.appendChild(opt);
   });
 }
