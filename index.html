@@ -627,13 +627,19 @@ function renderStandings(results) {
   });
 
   results.forEach(r => {
-    teams[r.teamA].wins += r.winsA;
-    teams[r.teamA].losses += r.winsB;
-    teams[r.teamB].wins += r.winsB;
-    teams[r.teamB].losses += r.winsA;
-    if (r.winsA >= 2) teams[r.teamA].pts += 3;
-    else if (r.winsB >= 2) teams[r.teamB].pts += 3;
-    else { teams[r.teamA].pts += 1; teams[r.teamB].pts += 1; }
+    if (r.winsA >= 2) {
+      teams[r.teamA].wins += 1;
+      teams[r.teamB].losses += 1;
+      teams[r.teamA].pts += 3;
+    } else if (r.winsB >= 2) {
+      teams[r.teamB].wins += 1;
+      teams[r.teamA].losses += 1;
+      teams[r.teamB].pts += 3;
+    } else {
+      // Split / incomplete — no match win/loss assigned
+      teams[r.teamA].pts += 1;
+      teams[r.teamB].pts += 1;
+    }
   });
 
   const sorted = Object.entries(teams).sort((a, b) => {
