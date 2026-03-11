@@ -341,6 +341,9 @@
     .playoff-arrow { transform: rotate(90deg); }
   }
 </style>
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
 </head>
 <body>
 
@@ -591,7 +594,22 @@
 </footer>
 
 <script>
-// ── Dynamic Standings (reads from shared localStorage) ──
+// ══════════════════════════════════════════════
+//  FIREBASE CONFIG — fill in your project values
+// ══════════════════════════════════════════════
+const firebaseConfig = {
+  apiKey:            "AIzaSyBeXELSbgnDbLCIUGeB1hSdmOFKbs-KorI",
+  authDomain:        "piccornhole.firebaseapp.com",
+  databaseURL:       "https://piccornhole-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId:         "piccornhole",
+  storageBucket:     "piccornhole.firebasestorage.app",
+  messagingSenderId: "1005077269160",
+  appId:             "1:1005077269160:web:d724b5f66eeb44145a109d"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+// ── Dynamic Standings (Firebase real-time) ──
 const TEAM_INFO = {
   Althea:  { emoji: "🔴", captain: "Althea Gere" },
   Justin:  { emoji: "🔵", captain: "Justin Ruan" },
@@ -600,9 +618,8 @@ const TEAM_INFO = {
   Landice: { emoji: "🟠", captain: "Landice Fu" }
 };
 
-function loadStandings() {
-  let results = [];
-  try { results = JSON.parse(localStorage.getItem('pcl_results')) || []; } catch {}
+function renderStandings(results) {
+  results = results || [];
 
   const teams = {};
   Object.keys(TEAM_INFO).forEach(t => {
@@ -640,7 +657,13 @@ function loadStandings() {
   }).join('');
 }
 
-loadStandings();
+// Real-time listener — standings update automatically when scores change
+db.ref('results').on('value', (snap) => {
+  renderStandings(snap.val() || []);
+});
+
+// Initial render with empty data (Firebase will update shortly)
+renderStandings([]);
 </script>
 </body>
 </html>
