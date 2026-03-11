@@ -285,11 +285,135 @@
     box-shadow: var(--shadow);
   }
 
+  /* ── Manage Tab ── */
+  .manage-week-card {
+    background: var(--card);
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin-bottom: 12px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+    border-left: 4px solid var(--border);
+  }
+  .manage-week-card.has-roster { border-left-color: var(--accent3); }
+  .manage-week-card.is-bye { border-left-color: var(--muted); opacity: 0.6; }
+  .manage-week-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+  .manage-week-title {
+    font-family: 'Bangers', cursive;
+    font-size: 1.1rem;
+    color: var(--accent2);
+    letter-spacing: 1px;
+  }
+  .manage-opponent {
+    font-size: 0.85rem;
+    color: #555;
+    margin-bottom: 8px;
+  }
+  .manage-players {
+    font-size: 0.85rem;
+    color: #555;
+    line-height: 1.7;
+    padding: 8px 12px;
+    background: #fef9f0;
+    border-radius: 8px;
+  }
+  .manage-players .player-name { display: inline-block; margin-right: 12px; }
+  .manage-empty {
+    font-size: 0.85rem;
+    color: var(--muted);
+    font-style: italic;
+  }
+  .edit-btn {
+    padding: 5px 14px;
+    background: var(--accent2);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .edit-btn:hover { background: #d35400; }
+  .delete-btn {
+    padding: 5px 14px;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+    margin-left: 6px;
+  }
+  .delete-btn:hover { background: #922b21; }
+  .save-btn {
+    padding: 5px 14px;
+    background: var(--accent3);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .save-btn:hover { background: #1e8449; }
+  .cancel-btn {
+    padding: 5px 14px;
+    background: var(--muted);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    margin-left: 6px;
+  }
+  .manage-edit-checklist {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+    margin: 10px 0;
+  }
+  .manage-edit-checklist label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.85rem;
+    padding: 4px 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 400;
+    margin-bottom: 0;
+  }
+  .manage-edit-checklist label:hover { background: #fef9f0; }
+  .manage-edit-checklist input[type="checkbox"] {
+    width: 16px; height: 16px;
+    accent-color: var(--accent);
+  }
+  .manage-summary {
+    text-align: center;
+    padding: 16px;
+    background: #f8f1e4;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    font-size: 0.9rem;
+    color: #555;
+  }
+  .manage-summary strong { color: var(--accent); }
+
   /* ── Responsive ── */
   @media (max-width: 500px) {
     .player-checklist { grid-template-columns: 1fr; }
     .game-rosters { grid-template-columns: 1fr; gap: 8px; }
     .vs-divider { display: none; }
+    .manage-edit-checklist { grid-template-columns: 1fr; }
   }
 </style>
 <!-- Firebase SDK -->
@@ -310,6 +434,7 @@
   <div class="tabs">
     <button class="tab-btn active" onclick="switchTab('submit')">Submit Roster</button>
     <button class="tab-btn" onclick="switchTab('view')">View Rosters</button>
+    <button class="tab-btn" onclick="switchTab('manage')">Manage Rosters</button>
   </div>
 
   <!-- ═══ SUBMIT TAB ═══ -->
@@ -327,26 +452,26 @@
 
       <label for="roster-week">Match Week</label>
       <select id="roster-week" onchange="onTeamOrWeekChange()">
-        <option value="1">Wk 1 – Mar 4</option>
-        <option value="2" selected>Wk 2 – Mar 11</option>
-        <option value="3">Wk 3 – Mar 18</option>
-        <option value="4">Wk 4 – Mar 25</option>
-        <option value="5">Wk 5 – Apr 1</option>
-        <option value="6">Wk 6 – Apr 8</option>
-        <option value="7">Wk 7 – Apr 15</option>
-        <option value="8">Wk 8 – Apr 22</option>
-        <option value="9">Wk 9 – Apr 29</option>
-        <option value="10">Wk 10 – May 6</option>
-        <option value="11">Wk 11 – May 13</option>
-        <option value="12">Wk 12 – May 20</option>
-        <option value="13">Wk 13 – May 27</option>
-        <option value="14">Wk 14 – Jun 3</option>
-        <option value="15">Wk 15 – Jun 10</option>
-        <option value="16">Wk 16 – Jun 17</option>
-        <option value="17">Wk 17 – Jun 24</option>
-        <option value="18">Wk 18 – Jul 1</option>
-        <option value="19">Wk 19 – Jul 8</option>
-        <option value="20">Wk 20 – Jul 15</option>
+        <option value="1">Week 1 – Mar 4</option>
+        <option value="2" selected>Week 2 – Mar 11</option>
+        <option value="3">Week 3 – Mar 18</option>
+        <option value="4">Week 4 – Mar 25</option>
+        <option value="5">Week 5 – Apr 1</option>
+        <option value="6">Week 6 – Apr 8</option>
+        <option value="7">Week 7 – Apr 15</option>
+        <option value="8">Week 8 – Apr 22</option>
+        <option value="9">Week 9 – Apr 29</option>
+        <option value="10">Week 10 – May 6</option>
+        <option value="11">Week 11 – May 13</option>
+        <option value="12">Week 12 – May 20</option>
+        <option value="13">Week 13 – May 27</option>
+        <option value="14">Week 14 – Jun 3</option>
+        <option value="15">Week 15 – Jun 10</option>
+        <option value="16">Week 16 – Jun 17</option>
+        <option value="17">Week 17 – Jun 24</option>
+        <option value="18">Week 18 – Jul 1</option>
+        <option value="19">Week 19 – Jul 8</option>
+        <option value="20">Week 20 – Jul 15</option>
       </select>
 
       <div id="matchup-display"></div>
@@ -366,6 +491,22 @@
   <!-- ═══ VIEW TAB ═══ -->
   <div id="tab-view" class="tab-content">
     <div id="roster-board"></div>
+  </div>
+
+  <!-- ═══ MANAGE TAB ═══ -->
+  <div id="tab-manage" class="tab-content">
+    <div class="form-card">
+      <label for="manage-team">Your Team</label>
+      <select id="manage-team" onchange="renderManageBoard()">
+        <option value="">-- Select your team --</option>
+        <option value="Althea">🔴 Team Althea</option>
+        <option value="Justin">🔵 Team Justin</option>
+        <option value="Nana">🟣 Team Nana</option>
+        <option value="Liyu">🟢 Team Liyu</option>
+        <option value="Landice">🟠 Team Landice</option>
+      </select>
+      <div id="manage-board"></div>
+    </div>
   </div>
 
 </div>
@@ -425,6 +566,8 @@ db.ref('rosters').on('value', (snap) => {
   _rostersCache = snap.val() || {};
   // Re-render board if on View tab
   if (document.querySelector('#tab-view.active')) renderBoard();
+  // Re-render manage tab if active
+  if (document.querySelector('#tab-manage.active')) renderManageBoard();
   // Update submit button state
   updateSubmitButton();
 });
@@ -438,12 +581,14 @@ function saveRosters(data) {
 }
 
 // ── TABS ──
+const TAB_INDEX = { submit: 0, view: 1, manage: 2 };
 function switchTab(tab) {
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
   document.querySelector(`#tab-${tab}`).classList.add('active');
-  document.querySelectorAll('.tab-btn')[tab === 'submit' ? 0 : 1].classList.add('active');
+  document.querySelectorAll('.tab-btn')[TAB_INDEX[tab]].classList.add('active');
   if (tab === 'view') renderBoard();
+  if (tab === 'manage') renderManageBoard();
 }
 
 // ── MATCHUP DISPLAY ──
@@ -632,6 +777,135 @@ function renderBoard() {
   });
 
   board.innerHTML = html;
+}
+
+// ── MANAGE TAB ──
+let _editingWeek = null; // track which week is being edited
+
+function renderManageBoard() {
+  const teamKey = document.getElementById('manage-team').value;
+  const board = document.getElementById('manage-board');
+  if (!teamKey) {
+    board.innerHTML = '<p style="color:var(--muted);font-size:0.85rem;text-align:center;padding:30px 0;">Select your team to see all weekly rosters</p>';
+    return;
+  }
+
+  const rosters = loadRosters();
+  const team = TEAMS[teamKey];
+
+  // Summary counts
+  let submitted = 0, total = 0;
+  SCHEDULE.forEach(s => {
+    const matchup = getMatchupForTeam(s.wk, teamKey);
+    if (matchup && matchup.type !== 'bye') {
+      total++;
+      if (rosters[`${s.wk}_${teamKey}`]) submitted++;
+    }
+  });
+
+  let html = `<div class="manage-summary">${team.emoji} <strong>Team ${teamKey}</strong> — ${submitted} of ${total} rosters submitted</div>`;
+
+  SCHEDULE.forEach(s => {
+    const matchup = getMatchupForTeam(s.wk, teamKey);
+    const rosterKey = `${s.wk}_${teamKey}`;
+    const roster = rosters[rosterKey];
+
+    if (!matchup) return;
+
+    if (matchup.type === 'bye') {
+      html += `<div class="manage-week-card is-bye">
+        <div class="manage-week-header">
+          <span class="manage-week-title">Week ${s.wk} — ${s.date}</span>
+          <span style="font-size:0.8rem;color:var(--muted);font-weight:600;">BYE WEEK</span>
+        </div>
+      </div>`;
+      return;
+    }
+
+    const oppEmoji = TEAMS[matchup.opponent].emoji;
+    const cardClass = roster ? 'has-roster' : '';
+    const isEditing = _editingWeek === s.wk;
+
+    html += `<div class="manage-week-card ${cardClass}">`;
+    html += `<div class="manage-week-header">`;
+    html += `<span class="manage-week-title">Week ${s.wk} — ${s.date}</span>`;
+
+    if (isEditing) {
+      html += `<span><button class="save-btn" onclick="saveManageEdit(${s.wk}, '${teamKey}')">Save</button>`;
+      html += `<button class="cancel-btn" onclick="cancelManageEdit()">Cancel</button></span>`;
+    } else if (roster) {
+      html += `<span><button class="edit-btn" onclick="startManageEdit(${s.wk})">Edit</button>`;
+      html += `<button class="delete-btn" onclick="deleteRoster(${s.wk}, '${teamKey}')">Delete</button></span>`;
+    }
+    html += `</div>`;
+
+    html += `<div class="manage-opponent">vs ${oppEmoji} ${matchup.opponent}</div>`;
+
+    if (isEditing) {
+      // Show editable checklist
+      const currentPlayers = roster ? roster.players : [];
+      html += `<div class="manage-edit-checklist" id="manage-checklist-${s.wk}">`;
+      // Captain first
+      const capChecked = currentPlayers.includes(team.captain) ? 'checked' : '';
+      html += `<label><input type="checkbox" value="${team.captain}" ${capChecked}> ${team.captain} ⭐</label>`;
+      team.players.forEach(p => {
+        const checked = currentPlayers.includes(p) ? 'checked' : '';
+        html += `<label><input type="checkbox" value="${p}" ${checked}> ${p}</label>`;
+      });
+      html += `</div>`;
+    } else if (roster) {
+      html += `<div class="manage-players">${roster.players.map(p => `<span class="player-name">• ${p}</span>`).join(' ')}</div>`;
+    } else {
+      html += `<div class="manage-empty">No roster submitted yet</div>`;
+    }
+
+    html += `</div>`;
+  });
+
+  board.innerHTML = html;
+}
+
+function startManageEdit(weekNum) {
+  _editingWeek = weekNum;
+  renderManageBoard();
+}
+
+function cancelManageEdit() {
+  _editingWeek = null;
+  renderManageBoard();
+}
+
+function saveManageEdit(weekNum, teamKey) {
+  const checklist = document.getElementById(`manage-checklist-${weekNum}`);
+  const checked = checklist.querySelectorAll('input[type="checkbox"]:checked');
+  const players = Array.from(checked).map(cb => cb.value);
+
+  if (players.length < 2) {
+    alert('You need at least 2 players for a match!');
+    return;
+  }
+
+  const rosters = loadRosters();
+  const key = `${weekNum}_${teamKey}`;
+  rosters[key] = {
+    team: teamKey,
+    week: weekNum,
+    players: players,
+    time: new Date().toISOString(),
+    edited: true
+  };
+  saveRosters(rosters);
+  _editingWeek = null;
+  // renderManageBoard() will be called by the Firebase listener
+}
+
+function deleteRoster(weekNum, teamKey) {
+  if (!confirm(`Delete roster for Week ${weekNum}? This will hide the lineup again.`)) return;
+  const rosters = loadRosters();
+  const key = `${weekNum}_${teamKey}`;
+  delete rosters[key];
+  saveRosters(rosters);
+  // renderManageBoard() will be called by the Firebase listener
 }
 
 // ── INIT ──
