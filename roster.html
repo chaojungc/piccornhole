@@ -292,6 +292,9 @@
     .vs-divider { display: none; }
   }
 </style>
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
 </head>
 <body>
 
@@ -400,14 +403,38 @@ const SCHEDULE = [
   { wk:20, date:"Jul 15",  g1:["Althea","Justin"],  g2:["Nana","Landice"],   bye:"Liyu" }
 ];
 
-// ── STATE (persisted to localStorage) ──
-const STORAGE_KEY = 'pcl_rosters';
+// ══════════════════════════════════════════════
+//  FIREBASE CONFIG — fill in your project values
+// ══════════════════════════════════════════════
+const firebaseConfig = {
+  apiKey:            "AIzaSyBeXELSbgnDbLCIUGeB1hSdmOFKbs-KorI",
+  authDomain:        "piccornhole.firebaseapp.com",
+  databaseURL:       "https://piccornhole-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId:         "piccornhole",
+  storageBucket:     "piccornhole.firebasestorage.app",
+  messagingSenderId: "1005077269160",
+  appId:             "1:1005077269160:web:d724b5f66eeb44145a109d"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+// ── STATE (Firebase-backed with local cache) ──
+let _rostersCache = {};
+
+db.ref('rosters').on('value', (snap) => {
+  _rostersCache = snap.val() || {};
+  // Re-render board if on View tab
+  if (document.querySelector('#tab-view.active')) renderBoard();
+  // Update submit button state
+  updateSubmitButton();
+});
+
 function loadRosters() {
-  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; }
-  catch { return {}; }
+  return _rostersCache;
 }
 function saveRosters(data) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  _rostersCache = data;
+  db.ref('rosters').set(data);
 }
 
 // ── TABS ──
