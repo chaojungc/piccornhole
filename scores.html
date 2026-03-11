@@ -1,0 +1,1379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PCL Scoreboard</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bangers&family=Inter:wght@400;500;600;700;900&display=swap');
+
+  :root {
+    --bg: #fdf6ec;
+    --card: #ffffff;
+    --accent: #c0392b;
+    --accent2: #e67e22;
+    --accent3: #27ae60;
+    --dark: #2c3e50;
+    --muted: #7f8c8d;
+    --border: #e0d5c1;
+    --shadow: 0 4px 20px rgba(0,0,0,0.08);
+    --radius: 16px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--dark);
+    line-height: 1.6;
+  }
+
+  /* ── Header ── */
+  .header {
+    background: linear-gradient(135deg, #8B4513 0%, #c0392b 50%, #e67e22 100%);
+    color: white;
+    text-align: center;
+    padding: 32px 20px;
+    position: relative;
+    overflow: hidden;
+  }
+  .header::before {
+    content: '';
+    position: absolute;
+    top: -50%; left: -50%;
+    width: 200%; height: 200%;
+    background: repeating-conic-gradient(rgba(255,255,255,0.03) 0% 25%, transparent 0% 50%);
+    animation: spin 60s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .header h1 {
+    font-family: 'Bangers', cursive;
+    font-size: clamp(1.8rem, 4vw, 2.8rem);
+    letter-spacing: 2px;
+    position: relative;
+    text-shadow: 2px 2px 0 rgba(0,0,0,0.2);
+  }
+  .header .subtitle {
+    font-size: 0.95rem;
+    opacity: 0.85;
+    position: relative;
+    margin-top: 4px;
+  }
+  .back-link {
+    position: absolute;
+    top: 16px; left: 20px;
+    color: white;
+    text-decoration: none;
+    font-size: 0.85rem;
+    opacity: 0.8;
+    z-index: 10;
+    transition: opacity 0.2s;
+  }
+  .back-link:hover { opacity: 1; }
+
+  /* ── Container ── */
+  .container { max-width: 800px; margin: 0 auto; padding: 32px 20px; }
+
+  /* ── Tabs ── */
+  .tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 28px;
+    background: var(--card);
+    border-radius: 12px;
+    padding: 4px;
+    box-shadow: var(--shadow);
+  }
+  .tab-btn {
+    flex: 1;
+    padding: 12px;
+    border: none;
+    background: transparent;
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 0.85rem;
+    cursor: pointer;
+    border-radius: 10px;
+    transition: all 0.2s;
+    color: var(--muted);
+  }
+  .tab-btn.active { background: var(--accent); color: white; }
+  .tab-btn:hover:not(.active) { background: #f8f1e4; color: var(--dark); }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* ── Scoreboard Card ── */
+  .scoreboard {
+    background: var(--dark);
+    border-radius: var(--radius);
+    padding: 32px 24px 24px;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.2);
+    text-align: center;
+    color: white;
+    position: relative;
+    overflow: hidden;
+  }
+  .scoreboard::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2), var(--accent3));
+  }
+  .scoreboard-match-info {
+    font-size: 0.8rem;
+    color: rgba(255,255,255,0.5);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 4px;
+  }
+  .scoreboard-game-label {
+    font-family: 'Bangers', cursive;
+    font-size: 1.2rem;
+    color: var(--accent2);
+    letter-spacing: 2px;
+    margin-bottom: 16px;
+  }
+  .scoreboard-teams {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 24px;
+  }
+  .sb-team {
+    text-align: center;
+  }
+  .sb-team-emoji { font-size: 2.5rem; }
+  .sb-team-name {
+    font-family: 'Bangers', cursive;
+    font-size: 1.4rem;
+    letter-spacing: 1px;
+    margin-top: 4px;
+  }
+  .sb-score {
+    font-family: 'Bangers', cursive;
+    font-size: 4rem;
+    line-height: 1;
+    cursor: default;
+    min-width: 80px;
+    padding: 8px 0;
+    border-radius: 12px;
+    transition: all 0.15s;
+    user-select: none;
+  }
+  .sb-score.clickable {
+    cursor: pointer;
+  }
+  .sb-score.clickable:hover {
+    background: rgba(255,255,255,0.08);
+  }
+  .sb-score.clickable:active {
+    transform: scale(0.95);
+  }
+  .sb-vs {
+    font-family: 'Bangers', cursive;
+    font-size: 1.5rem;
+    color: rgba(255,255,255,0.3);
+  }
+
+  /* Score buttons */
+  .score-btn {
+    padding: 8px 14px;
+    border: 2px solid rgba(255,255,255,0.15);
+    background: rgba(255,255,255,0.05);
+    color: white;
+    font-family: 'Inter', sans-serif;
+    font-weight: 700;
+    font-size: 0.75rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .score-btn:hover { background: rgba(255,255,255,0.12); border-color: rgba(255,255,255,0.3); }
+  .score-btn.hole { border-color: var(--accent3); color: #2ecc71; }
+  .score-btn.hole:hover { background: rgba(46,204,113,0.15); }
+  .score-btn.lean { border-color: #3498db; color: #3498db; }
+  .score-btn.lean:hover { background: rgba(52,152,219,0.15); }
+  .score-btn.board { border-color: var(--accent2); color: #f39c12; }
+  .score-btn.board:hover { background: rgba(243,156,18,0.15); }
+  .score-btn.neg { border-color: #e74c3c; color: #e74c3c; }
+  .score-btn.neg:hover { background: rgba(231,76,60,0.15); }
+
+  /* Player cards */
+  .team-section-label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-top: 16px;
+    margin-bottom: 8px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+  .player-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+  .player-card {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 10px;
+    padding: 10px 12px;
+    text-align: center;
+  }
+  .player-card-name {
+    font-weight: 700;
+    font-size: 0.85rem;
+    margin-bottom: 4px;
+    color: rgba(255,255,255,0.9);
+  }
+  .player-card-stats {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    font-size: 0.65rem;
+    color: rgba(255,255,255,0.45);
+    margin-bottom: 8px;
+  }
+  .player-stat { display: flex; align-items: center; gap: 2px; }
+  .player-stat-val { font-weight: 700; }
+  .player-card-pts {
+    font-family: 'Bangers', cursive;
+    font-size: 1.1rem;
+    margin-bottom: 8px;
+    letter-spacing: 1px;
+  }
+  .player-card-btns {
+    display: flex;
+    gap: 4px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .player-card-btns .score-btn {
+    padding: 5px 8px;
+    font-size: 0.65rem;
+  }
+
+  /* Game series tracker */
+  .series-tracker {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .series-dot {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    border: 2px solid rgba(255,255,255,0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Bangers', cursive;
+    font-size: 0.9rem;
+    color: rgba(255,255,255,0.3);
+    transition: all 0.3s;
+  }
+  .series-dot.current {
+    border-color: var(--accent2);
+    color: var(--accent2);
+    box-shadow: 0 0 12px rgba(230,126,34,0.3);
+  }
+  .series-dot.won-a {
+    border-color: transparent;
+    color: white;
+  }
+  .series-dot.won-b {
+    border-color: transparent;
+    color: white;
+  }
+
+  /* Action bar */
+  .action-bar {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    margin-top: 16px;
+  }
+  .action-btn {
+    padding: 10px 24px;
+    border: none;
+    border-radius: 10px;
+    font-family: 'Bangers', cursive;
+    font-size: 1rem;
+    letter-spacing: 1.5px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .action-btn.primary { background: var(--accent3); color: white; }
+  .action-btn.primary:hover { background: #219a52; }
+  .action-btn.secondary { background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.15); }
+  .action-btn.secondary:hover { background: rgba(255,255,255,0.15); }
+  .action-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* ── Setup Form ── */
+  .setup-card {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 28px;
+    box-shadow: var(--shadow);
+    margin-bottom: 20px;
+  }
+  .setup-card label {
+    display: block;
+    font-weight: 600;
+    font-size: 0.9rem;
+    margin-bottom: 6px;
+    color: var(--dark);
+  }
+  .setup-card select {
+    width: 100%;
+    padding: 10px 14px;
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    font-size: 0.95rem;
+    font-family: 'Inter', sans-serif;
+    background: white;
+    margin-bottom: 18px;
+    transition: border-color 0.2s;
+  }
+  .setup-card select:focus { outline: none; border-color: var(--accent); }
+  .start-btn {
+    display: block;
+    width: 100%;
+    padding: 16px;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    font-family: 'Bangers', cursive;
+    letter-spacing: 3px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .start-btn:hover { background: #a93226; }
+  .start-btn:disabled { background: #bbb; cursor: not-allowed; }
+  .matchup-preview {
+    background: #f8f1e4;
+    border-radius: 12px;
+    padding: 14px 18px;
+    margin-bottom: 20px;
+    text-align: center;
+    font-size: 0.9rem;
+    border: 1px dashed var(--border);
+  }
+  .matchup-preview strong { color: var(--accent); }
+
+  /* ── Results / History ── */
+  .standings-section { margin-bottom: 32px; }
+  .section-label {
+    font-family: 'Bangers', cursive;
+    font-size: 1.5rem;
+    color: var(--accent);
+    letter-spacing: 2px;
+    margin-bottom: 16px;
+    text-align: center;
+  }
+  .standings-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    background: var(--card);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--shadow);
+  }
+  .standings-table th {
+    background: var(--dark);
+    color: white;
+    padding: 12px 14px;
+    text-align: left;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .standings-table th.right, .standings-table td.right { text-align: right; }
+  .standings-table th.center, .standings-table td.center { text-align: center; }
+  .standings-table td {
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.9rem;
+  }
+  .standings-table tr:last-child td { border-bottom: none; }
+  .standings-table tr:hover td { background: #fef9f0; }
+  .rank { font-family: 'Bangers', cursive; font-size: 1.3rem; color: var(--accent2); }
+  .team-name-cell { font-weight: 700; }
+  .playoff-tag {
+    display: inline-block;
+    background: #d4edda;
+    color: #155724;
+    font-size: 0.65rem;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: 700;
+    margin-left: 6px;
+    text-transform: uppercase;
+  }
+
+  /* History cards */
+  .history-week {
+    margin-bottom: 24px;
+  }
+  .history-week-header {
+    font-family: 'Bangers', cursive;
+    font-size: 1.2rem;
+    color: var(--accent2);
+    letter-spacing: 1px;
+    margin-bottom: 10px;
+  }
+  .history-card {
+    background: var(--card);
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin-bottom: 10px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 12px;
+    border-left: 4px solid var(--accent3);
+  }
+  .history-team {
+    font-weight: 600;
+    font-size: 0.9rem;
+  }
+  .history-team.winner { color: var(--accent3); }
+  .history-team.right { text-align: right; }
+  .history-scores {
+    text-align: center;
+    font-family: 'Bangers', cursive;
+    font-size: 1.4rem;
+    color: var(--dark);
+    white-space: nowrap;
+  }
+  .history-game-scores {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    margin-top: 4px;
+  }
+  .game-score-chip {
+    background: #f0e6d3;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--dark);
+  }
+  .game-score-chip.win-a { background: #d4edda; color: #155724; }
+  .game-score-chip.win-b { background: #f8d7da; color: #721c24; }
+  .history-expand-btn {
+    display: block;
+    margin: 6px auto 0;
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-size: 0.7rem;
+    cursor: pointer;
+    text-decoration: underline;
+  }
+  .history-expand-btn:hover { color: var(--dark); }
+  .history-rounds {
+    display: none;
+    margin-top: 8px;
+    background: #f8f1e4;
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 0.75rem;
+  }
+  .history-rounds.open { display: block; }
+  .history-round-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 2px 0;
+    border-bottom: 1px solid rgba(0,0,0,0.06);
+  }
+  .history-round-row:last-child { border: none; }
+  .history-throw-pips { display: inline-flex; gap: 2px; margin-left: 4px; vertical-align: middle; }
+  .history-throw-pips .throw-pip { width: 12px; height: 12px; line-height: 12px; font-size: 0.45rem; }
+  .no-data {
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.9rem;
+    padding: 40px 24px;
+    background: var(--card);
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+  }
+
+  /* ── Round log ── */
+  .round-log {
+    margin-top: 16px;
+    max-height: 160px;
+    overflow-y: auto;
+    padding: 8px 12px;
+    background: rgba(255,255,255,0.03);
+    border-radius: 8px;
+    border: 1px solid rgba(255,255,255,0.06);
+  }
+  .round-log::-webkit-scrollbar { width: 4px; }
+  .round-log::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 4px; }
+  .round-entry {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.75rem;
+    color: rgba(255,255,255,0.5);
+    padding: 3px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+  }
+  .round-entry:last-child { border: none; }
+  .round-num { color: rgba(255,255,255,0.3); width: 30px; }
+  .round-a, .round-b { width: 60px; text-align: center; }
+  .round-diff { width: 60px; text-align: right; font-weight: 600; }
+  .round-diff.pos { color: #2ecc71; }
+  .round-diff.neg { color: #e74c3c; }
+  .round-diff.zero { color: rgba(255,255,255,0.3); }
+  .throw-detail {
+    display: flex;
+    gap: 3px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 2px;
+  }
+  .throw-pip {
+    display: inline-block;
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    font-size: 0.5rem;
+    line-height: 14px;
+    text-align: center;
+    font-weight: 700;
+    color: white;
+  }
+  .throw-pip.hole { background: #2ecc71; }
+  .throw-pip.lean { background: #3498db; }
+  .throw-pip.board { background: #f39c12; }
+  .throw-pip.neg { background: #e74c3c; }
+
+  /* ── Match winner banner ── */
+  .winner-banner {
+    background: linear-gradient(135deg, #f7dc6f 0%, #f39c12 100%);
+    border-radius: 12px;
+    padding: 24px;
+    text-align: center;
+    margin-top: 20px;
+    animation: popIn 0.4s ease;
+  }
+  @keyframes popIn {
+    0% { transform: scale(0.8); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  .winner-banner .trophy { font-size: 3rem; }
+  .winner-banner .winner-text {
+    font-family: 'Bangers', cursive;
+    font-size: 1.5rem;
+    color: var(--dark);
+    letter-spacing: 2px;
+    margin-top: 4px;
+  }
+  .winner-banner .match-summary {
+    font-size: 0.85rem;
+    color: #555;
+    margin-top: 6px;
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 550px) {
+    .scoreboard-teams { gap: 8px; }
+    .sb-score { font-size: 3rem; min-width: 60px; }
+    .sb-team-name { font-size: 1.1rem; }
+    .player-cards { grid-template-columns: 1fr 1fr; gap: 6px; }
+    .player-card { padding: 8px; }
+    .player-card-btns .score-btn { padding: 4px 6px; font-size: 0.6rem; }
+    .player-card-btns-row2 .score-btn { padding: 3px 6px; font-size: 0.55rem; }
+    .history-card { grid-template-columns: 1fr; text-align: center; gap: 4px; }
+    .history-team.right { text-align: center; }
+  }
+</style>
+</head>
+<body>
+
+<header class="header">
+  <a href="index.html" class="back-link">&larr; Back to Main</a>
+  <h1>🎯 LIVE SCOREBOARD</h1>
+  <p class="subtitle">Track scores round by round &bull; Best of 3</p>
+</header>
+
+<div class="container">
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('live')">Live Score</button>
+    <button class="tab-btn" onclick="switchTab('standings')">Standings</button>
+    <button class="tab-btn" onclick="switchTab('history')">History</button>
+  </div>
+
+  <!-- ═══ LIVE SCORING TAB ═══ -->
+  <div id="tab-live" class="tab-content active">
+
+    <!-- Setup phase -->
+    <div id="setup-phase">
+      <div class="setup-card">
+        <label for="score-week">Match Week</label>
+        <select id="score-week" onchange="onSetupChange()">
+          <option value="">-- Select week --</option>
+        </select>
+
+        <label for="score-game">Game</label>
+        <select id="score-game" onchange="onSetupChange()">
+          <option value="">-- Select game --</option>
+        </select>
+
+        <div id="setup-preview"></div>
+
+        <button id="start-match-btn" class="start-btn" disabled onclick="startMatch()">START MATCH 🔥</button>
+      </div>
+    </div>
+
+    <!-- Scoring phase (hidden until match starts) -->
+    <div id="scoring-phase" style="display:none;">
+      <div class="scoreboard">
+        <div class="scoreboard-match-info" id="sb-match-info"></div>
+        <div class="scoreboard-game-label" id="sb-game-label"></div>
+
+        <!-- Series tracker (dots for best of 3) -->
+        <div class="series-tracker" id="series-tracker"></div>
+
+        <!-- Team scores -->
+        <div class="scoreboard-teams">
+          <div class="sb-team">
+            <div class="sb-team-emoji" id="sb-emoji-a"></div>
+            <div class="sb-team-name" id="sb-name-a"></div>
+          </div>
+          <div>
+            <div style="display:flex;align-items:center;gap:12px;">
+              <div class="sb-score" id="sb-score-a">0</div>
+              <div class="sb-vs">—</div>
+              <div class="sb-score" id="sb-score-b">0</div>
+            </div>
+          </div>
+          <div class="sb-team">
+            <div class="sb-team-emoji" id="sb-emoji-b"></div>
+            <div class="sb-team-name" id="sb-name-b"></div>
+          </div>
+        </div>
+
+        <!-- Per-player scoring cards -->
+        <div class="team-section-label" id="section-label-a"></div>
+        <div class="player-cards" id="player-cards-a"></div>
+
+        <div class="team-section-label" id="section-label-b"></div>
+        <div class="player-cards" id="player-cards-b"></div>
+
+        <!-- Round actions -->
+        <div class="action-bar">
+          <button class="action-btn secondary" onclick="undoLastAction()">Undo</button>
+          <button class="action-btn primary" id="end-round-btn" onclick="endRound()">End Round ✓</button>
+        </div>
+
+        <!-- Round-by-round log -->
+        <div class="round-log" id="round-log"></div>
+
+        <!-- Winner banner (appears when game ends) -->
+        <div id="game-winner-banner"></div>
+      </div>
+
+      <!-- Below scoreboard actions -->
+      <div style="display:flex;gap:10px;justify-content:center;margin-top:16px;">
+        <button class="action-btn secondary" style="background:var(--card);color:var(--dark);border:2px solid var(--border);" onclick="abandonMatch()">End / New Match</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ STANDINGS TAB ═══ -->
+  <div id="tab-standings" class="tab-content">
+    <div class="section-label">🏅 Season Standings</div>
+    <div id="standings-container"></div>
+  </div>
+
+  <!-- ═══ HISTORY TAB ═══ -->
+  <div id="tab-history" class="tab-content">
+    <div class="section-label">📜 Match History</div>
+    <div id="history-container"></div>
+  </div>
+
+</div>
+
+<script>
+// ══════════════════════════════════════════════
+//  DATA (shared with other pages)
+// ══════════════════════════════════════════════
+const TEAMS = {
+  Althea:  { emoji: "🔴", captain: "Althea Gere", color: "#c0392b", players: ["Alex", "Yu-tang Cheng", "Jocelin", "Aaron Chiu", "Palm", "Angela"] },
+  Justin:  { emoji: "🔵", captain: "Justin Ruan", color: "#2980b9", players: ["Ann Chiang", "Jeff", "Jose Calpito", "CJ", "Rick Lee", "Oscar Shen"] },
+  Nana:    { emoji: "🟣", captain: "Nana Fu", color: "#8e44ad", players: ["Wen", "Kelvin Chow", "Messi Yang", "Angela Wu", "Kobe", "Amelia Hu"] },
+  Liyu:    { emoji: "🟢", captain: "Liyu", color: "#27ae60", players: ["Yanbin", "Tim Chen", "Ashley Hsu", "Brad Lee", "Genie Hou", "Lawrence"] },
+  Landice: { emoji: "🟠", captain: "Landice Fu", color: "#e67e22", players: ["Tinya", "Steve", "Ting-Kai", "Shannon", "Lee Heng", "Yuji"] }
+};
+
+const SCHEDULE = [
+  { wk:1,  date:"Mar 4",   g1:["Althea","Nana"],    g2:["Liyu","Landice"],   bye:"Justin" },
+  { wk:2,  date:"Mar 11",  g1:["Justin","Nana"],    g2:["Althea","Liyu"],    bye:"Landice" },
+  { wk:3,  date:"Mar 18",  g1:["Justin","Landice"], g2:["Nana","Liyu"],      bye:"Althea" },
+  { wk:4,  date:"Mar 25",  g1:["Justin","Liyu"],    g2:["Landice","Althea"], bye:"Nana" },
+  { wk:5,  date:"Apr 1",   g1:["Justin","Althea"],  g2:["Landice","Nana"],   bye:"Liyu" },
+  { wk:6,  date:"Apr 8",   g1:["Nana","Althea"],    g2:["Landice","Liyu"],   bye:"Justin" },
+  { wk:7,  date:"Apr 15",  g1:["Nana","Justin"],    g2:["Liyu","Althea"],    bye:"Landice" },
+  { wk:8,  date:"Apr 22",  g1:["Landice","Justin"], g2:["Liyu","Nana"],      bye:"Althea" },
+  { wk:9,  date:"Apr 29",  g1:["Liyu","Justin"],    g2:["Althea","Landice"], bye:"Nana" },
+  { wk:10, date:"May 6",   g1:["Althea","Justin"],  g2:["Nana","Landice"],   bye:"Liyu" },
+  { wk:11, date:"May 13",  g1:["Althea","Nana"],    g2:["Liyu","Landice"],   bye:"Justin" },
+  { wk:12, date:"May 20",  g1:["Justin","Nana"],    g2:["Althea","Liyu"],    bye:"Landice" },
+  { wk:13, date:"May 27",  g1:["Justin","Landice"], g2:["Nana","Liyu"],      bye:"Althea" },
+  { wk:14, date:"Jun 3",   g1:["Justin","Liyu"],    g2:["Landice","Althea"], bye:"Nana" },
+  { wk:15, date:"Jun 10",  g1:["Justin","Althea"],  g2:["Landice","Nana"],   bye:"Liyu" },
+  { wk:16, date:"Jun 17",  g1:["Nana","Althea"],    g2:["Landice","Liyu"],   bye:"Justin" },
+  { wk:17, date:"Jun 24",  g1:["Nana","Justin"],    g2:["Liyu","Althea"],    bye:"Landice" },
+  { wk:18, date:"Jul 1",   g1:["Landice","Justin"], g2:["Liyu","Nana"],      bye:"Althea" },
+  { wk:19, date:"Jul 8",   g1:["Liyu","Justin"],    g2:["Althea","Landice"], bye:"Nana" },
+  { wk:20, date:"Jul 15",  g1:["Althea","Justin"],  g2:["Nana","Landice"],   bye:"Liyu" }
+];
+
+// ══════════════════════════════════════════════
+//  STORAGE
+// ══════════════════════════════════════════════
+const RESULTS_KEY = 'pcl_results';
+function loadResults() {
+  try { return JSON.parse(localStorage.getItem(RESULTS_KEY)) || []; }
+  catch { return []; }
+}
+function saveResults(data) {
+  localStorage.setItem(RESULTS_KEY, JSON.stringify(data));
+}
+
+// ── ROSTER STORAGE ──
+const ROSTERS_KEY = 'pcl_rosters';
+function loadRosters() {
+  try { return JSON.parse(localStorage.getItem(ROSTERS_KEY)) || {}; }
+  catch { return {}; }
+}
+
+// ══════════════════════════════════════════════
+//  TABS
+// ══════════════════════════════════════════════
+function switchTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  const tabs = ['live','standings','history'];
+  const idx = tabs.indexOf(tab);
+  document.querySelector(`#tab-${tab}`).classList.add('active');
+  document.querySelectorAll('.tab-btn')[idx].classList.add('active');
+  if (tab === 'standings') renderStandings();
+  if (tab === 'history') renderHistory();
+}
+
+// ══════════════════════════════════════════════
+//  SETUP PHASE
+// ══════════════════════════════════════════════
+function populateWeeks() {
+  const sel = document.getElementById('score-week');
+  SCHEDULE.forEach(s => {
+    const opt = document.createElement('option');
+    opt.value = s.wk;
+    opt.textContent = `Wk ${s.wk} — ${s.date}`;
+    sel.appendChild(opt);
+  });
+}
+
+function onSetupChange() {
+  const wkVal = document.getElementById('score-week').value;
+  const gameSel = document.getElementById('score-game');
+  const preview = document.getElementById('setup-preview');
+  const btn = document.getElementById('start-match-btn');
+
+  if (!wkVal) {
+    gameSel.innerHTML = '<option value="">-- Select game --</option>';
+    preview.innerHTML = '';
+    btn.disabled = true;
+    return;
+  }
+
+  const wk = SCHEDULE[parseInt(wkVal) - 1];
+
+  // Populate games for this week
+  if (gameSel.dataset.week !== wkVal) {
+    gameSel.dataset.week = wkVal;
+    gameSel.innerHTML = '<option value="">-- Select game --</option>';
+    const g1opt = document.createElement('option');
+    g1opt.value = 'g1';
+    g1opt.textContent = `Game 1: ${TEAMS[wk.g1[0]].emoji} ${wk.g1[0]} vs ${TEAMS[wk.g1[1]].emoji} ${wk.g1[1]}`;
+    gameSel.appendChild(g1opt);
+    const g2opt = document.createElement('option');
+    g2opt.value = 'g2';
+    g2opt.textContent = `Game 2: ${TEAMS[wk.g2[0]].emoji} ${wk.g2[0]} vs ${TEAMS[wk.g2[1]].emoji} ${wk.g2[1]}`;
+    gameSel.appendChild(g2opt);
+  }
+
+  const gameVal = gameSel.value;
+  if (!gameVal) {
+    preview.innerHTML = '';
+    btn.disabled = true;
+    return;
+  }
+
+  const game = wk[gameVal];
+  const tA = game[0], tB = game[1];
+
+  // Check if already recorded
+  const results = loadResults();
+  const existing = results.find(r => r.week === parseInt(wkVal) && r.gameSlot === gameVal);
+  if (existing) {
+    preview.innerHTML = `<div class="matchup-preview" style="border-color:var(--accent3);">✅ This match already has a result: <strong>${TEAMS[existing.teamA].emoji} ${existing.teamA} ${existing.winsA}–${existing.winsB} ${TEAMS[existing.teamB].emoji} ${existing.teamB}</strong><br><small style="color:var(--muted);">Starting a new match will overwrite the previous result.</small></div>`;
+  } else {
+    preview.innerHTML = `<div class="matchup-preview"><strong>${TEAMS[tA].emoji} ${tA}</strong> vs <strong>${TEAMS[tB].emoji} ${tB}</strong><br><small style="color:var(--muted);">Best of 3 &bull; First to 21 per game</small></div>`;
+  }
+  btn.disabled = false;
+}
+
+// ══════════════════════════════════════════════
+//  LIVE MATCH STATE
+// ══════════════════════════════════════════════
+let match = null;
+
+function getPlayersForTeam(teamName, week) {
+  // Try to load from roster submission first, fall back to TEAMS.players
+  const rosters = loadRosters();
+  const key = `${week}_${teamName}`;
+  if (rosters[key] && rosters[key].players && rosters[key].players.length > 0) {
+    return rosters[key].players.slice(0, 2); // Use first 2 from submitted roster
+  }
+  // Fall back to first 2 from team data
+  return TEAMS[teamName].players.slice(0, 2);
+}
+
+function initPlayerStats(players) {
+  const stats = {};
+  players.forEach(p => { stats[p] = { holes: 0, leans: 0, boards: 0, pts: 0 }; });
+  return stats;
+}
+
+function startMatch() {
+  const wkVal = parseInt(document.getElementById('score-week').value);
+  const gameVal = document.getElementById('score-game').value;
+  const wk = SCHEDULE[wkVal - 1];
+  const game = wk[gameVal];
+
+  const playersA = getPlayersForTeam(game[0], wkVal);
+  const playersB = getPlayersForTeam(game[1], wkVal);
+
+  match = {
+    week: wkVal,
+    gameSlot: gameVal,
+    teamA: game[0],
+    teamB: game[1],
+    playersA,
+    playersB,
+    playerStats: { ...initPlayerStats(playersA), ...initPlayerStats(playersB) },
+    currentGame: 1,
+    games: [],
+    winsA: 0,
+    winsB: 0,
+    roundScoreA: 0,
+    roundScoreB: 0,
+    actions: [],
+    rounds: [],
+    matchOver: false
+  };
+
+  document.getElementById('setup-phase').style.display = 'none';
+  document.getElementById('scoring-phase').style.display = 'block';
+  renderScoreboard();
+}
+
+function renderScoreboard() {
+  if (!match) return;
+  const tA = TEAMS[match.teamA], tB = TEAMS[match.teamB];
+
+  document.getElementById('sb-match-info').textContent = `Week ${match.week} — ${SCHEDULE[match.week-1].date}`;
+  document.getElementById('sb-game-label').textContent = match.matchOver ? 'MATCH COMPLETE' : `Game ${match.currentGame} of 3`;
+
+  document.getElementById('sb-emoji-a').textContent = tA.emoji;
+  document.getElementById('sb-name-a').textContent = match.teamA;
+  document.getElementById('sb-emoji-b').textContent = tB.emoji;
+  document.getElementById('sb-name-b').textContent = match.teamB;
+
+  document.getElementById('sb-score-a').textContent = match.roundScoreA;
+  document.getElementById('sb-score-b').textContent = match.roundScoreB;
+
+  // Series tracker dots
+  let dotsHtml = '';
+  for (let i = 1; i <= 3; i++) {
+    const gameResult = match.games[i-1];
+    let cls = '';
+    let label = i;
+    if (gameResult) {
+      if (gameResult.winner === 'a') { cls = 'won-a'; label = tA.emoji; }
+      else { cls = 'won-b'; label = tB.emoji; }
+    } else if (i === match.currentGame && !match.matchOver) {
+      cls = 'current';
+    }
+    dotsHtml += `<div class="series-dot ${cls}" title="Game ${i}">${label}</div>`;
+  }
+  document.getElementById('series-tracker').innerHTML = dotsHtml;
+
+  // Series score display
+  document.querySelector('.sb-vs').textContent = `${match.winsA} — ${match.winsB}`;
+
+  // Player cards
+  renderPlayerCards();
+
+  // Round log
+  renderRoundLog();
+
+  // Disable scoring buttons if match over
+  document.querySelectorAll('.score-btn, #end-round-btn').forEach(b => {
+    b.disabled = match.matchOver;
+  });
+
+  // Winner banner
+  renderGameWinnerBanner();
+}
+
+function renderPlayerCards() {
+  if (!match) return;
+  const tA = TEAMS[match.teamA], tB = TEAMS[match.teamB];
+
+  document.getElementById('section-label-a').innerHTML = `${tA.emoji} ${match.teamA}`;
+  document.getElementById('section-label-b').innerHTML = `${tB.emoji} ${match.teamB}`;
+
+  document.getElementById('player-cards-a').innerHTML = match.playersA.map(p => buildPlayerCard(p, 'a', tA.color)).join('');
+  document.getElementById('player-cards-b').innerHTML = match.playersB.map(p => buildPlayerCard(p, 'b', tB.color)).join('');
+}
+
+function buildPlayerCard(player, side, teamColor) {
+  const s = match.playerStats[player] || { holes: 0, leans: 0, boards: 0, pts: 0 };
+  const disabled = match.matchOver ? 'disabled' : '';
+  const escapedPlayer = player.replace(/'/g, "\\'");
+  return `
+    <div class="player-card" style="border-color: ${teamColor}33;">
+      <div class="player-card-name" style="color: ${teamColor};">${player}</div>
+      <div class="player-card-stats">
+        <div class="player-stat">🕳️ <span class="player-stat-val">${s.holes}</span></div>
+        <div class="player-stat">🎯 <span class="player-stat-val">${s.leans}</span></div>
+        <div class="player-stat">🟫 <span class="player-stat-val">${s.boards}</span></div>
+      </div>
+      <div class="player-card-pts">${s.pts} pts</div>
+      <div class="player-card-btns">
+        <button class="score-btn hole" ${disabled} onclick="addScore('${side}','${escapedPlayer}',3)">🕳️ +3</button>
+        <button class="score-btn lean" ${disabled} onclick="addScore('${side}','${escapedPlayer}',2)">🎯 +2</button>
+        <button class="score-btn board" ${disabled} onclick="addScore('${side}','${escapedPlayer}',1)">🟫 +1</button>
+        <button class="score-btn neg" ${disabled} onclick="addScore('${side}','${escapedPlayer}',-1)">-1</button>
+        <button class="score-btn neg" ${disabled} onclick="addScore('${side}','${escapedPlayer}',-2)">-2</button>
+      </div>
+    </div>`;
+}
+
+function throwPips(throws, side) {
+  if (!throws || throws.length === 0) return '';
+  const sideThrows = throws.filter(t => t.side === side);
+  if (sideThrows.length === 0) return '';
+  return '<div class="throw-detail">' + sideThrows.map(t => {
+    const cls = t.pts === 3 ? 'hole' : t.pts === 2 ? 'lean' : t.pts === 1 ? 'board' : t.pts < 0 ? 'neg' : 'board';
+    const title = t.player ? ` title="${t.player}"` : '';
+    return `<span class="throw-pip ${cls}"${title}>${t.pts > 0 ? '+' : ''}${t.pts}</span>`;
+  }).join('') + '</div>';
+}
+
+function renderRoundLog() {
+  const log = document.getElementById('round-log');
+  if (match.rounds.length === 0 && match.actions.length === 0) {
+    log.innerHTML = '<div style="text-align:center;font-size:0.75rem;color:rgba(255,255,255,0.3);padding:8px;">Rounds will appear here</div>';
+    return;
+  }
+  let html = '<div style="display:flex;justify-content:space-between;font-size:0.65rem;color:rgba(255,255,255,0.3);padding:2px 0;border-bottom:1px solid rgba(255,255,255,0.08);margin-bottom:4px;text-transform:uppercase;letter-spacing:1px;"><span style="width:30px;">Rnd</span><span style="width:60px;text-align:center;">' + match.teamA + '</span><span style="width:60px;text-align:center;">' + match.teamB + '</span><span style="width:60px;text-align:right;">Net</span></div>';
+  let runA = 0, runB = 0;
+  match.rounds.forEach((r, i) => {
+    runA += r.a; runB += r.b;
+    const diff = r.a - r.b;
+    const diffCls = diff > 0 ? 'pos' : diff < 0 ? 'neg' : 'zero';
+    const diffStr = diff > 0 ? `+${diff}` : diff < 0 ? `${diff}` : '0';
+    html += `<div class="round-entry"><span class="round-num">${i+1}</span><span class="round-a">${r.rawA}${throwPips(r.throws,'a')}</span><span class="round-b">${r.rawB}${throwPips(r.throws,'b')}</span><span class="round-diff ${diffCls}">${diffStr}</span></div>`;
+  });
+  // Show current round throws in progress
+  if (match.actions.length > 0 && !match.matchOver) {
+    html += `<div class="round-entry" style="opacity:0.5;font-style:italic;"><span class="round-num">▸</span><span class="round-a">${match.roundScoreA}${throwPips(match.actions,'a')}</span><span class="round-b">${match.roundScoreB}${throwPips(match.actions,'b')}</span><span class="round-diff zero">…</span></div>`;
+  }
+  // Running total
+  html += `<div class="round-entry" style="border-top:1px solid rgba(255,255,255,0.1);margin-top:4px;padding-top:4px;font-weight:700;color:rgba(255,255,255,0.7);"><span class="round-num">Σ</span><span class="round-a">${runA}</span><span class="round-b">${runB}</span><span class="round-diff ${runA>runB?'pos':runA<runB?'neg':'zero'}">${runA>runB?'+':''}${runA-runB}</span></div>`;
+  log.innerHTML = html;
+}
+
+function renderGameWinnerBanner() {
+  const el = document.getElementById('game-winner-banner');
+  if (!match.matchOver) { el.innerHTML = ''; return; }
+
+  const winner = match.winsA > match.winsB ? match.teamA : match.teamB;
+  const winnerInfo = TEAMS[winner];
+  el.innerHTML = `
+    <div class="winner-banner">
+      <div class="trophy">🏆</div>
+      <div class="winner-text">${winnerInfo.emoji} TEAM ${winner.toUpperCase()} WINS!</div>
+      <div class="match-summary">Final: ${match.teamA} ${match.winsA} — ${match.winsB} ${match.teamB}</div>
+    </div>`;
+}
+
+// ══════════════════════════════════════════════
+//  SCORING ACTIONS
+// ══════════════════════════════════════════════
+function addScore(side, player, pts) {
+  if (!match || match.matchOver) return;
+  match.actions.push({ side, player, pts });
+  if (side === 'a') match.roundScoreA += pts;
+  else match.roundScoreB += pts;
+
+  // Update player stats
+  const ps = match.playerStats[player];
+  if (ps) {
+    ps.pts += pts;
+    if (pts === 3) ps.holes++;
+    else if (pts === 2) ps.leans++;
+    else if (pts === 1) ps.boards++;
+    else if (pts === -1) ps.boards--;
+    else if (pts === -2) ps.leans--;
+  }
+
+  renderScoreboard();
+}
+
+function undoLastAction() {
+  if (!match || match.actions.length === 0 || match.matchOver) return;
+  const last = match.actions.pop();
+  if (last.side === 'a') match.roundScoreA -= last.pts;
+  else match.roundScoreB -= last.pts;
+
+  // Reverse player stats
+  const ps = match.playerStats[last.player];
+  if (ps) {
+    ps.pts -= last.pts;
+    if (last.pts === 3) ps.holes--;
+    else if (last.pts === 2) ps.leans--;
+    else if (last.pts === 1) ps.boards--;
+    else if (last.pts === -1) ps.boards++;
+    else if (last.pts === -2) ps.leans++;
+  }
+
+  renderScoreboard();
+}
+
+function endRound() {
+  if (!match || match.matchOver) return;
+
+  // Accumulation scoring: both sides keep their raw points
+  const roundA = match.roundScoreA;
+  const roundB = match.roundScoreB;
+
+  // Get current game running totals
+  const currentRounds = match.rounds;
+  let totalA = currentRounds.reduce((s, r) => s + r.a, 0) + roundA;
+  let totalB = currentRounds.reduce((s, r) => s + r.b, 0) + roundB;
+
+  match.rounds.push({ a: roundA, b: roundB, rawA: roundA, rawB: roundB, throws: [...match.actions] });
+  match.roundScoreA = 0;
+  match.roundScoreB = 0;
+  match.actions = [];
+
+  // Check if game ends (either team reaches 21)
+  if (totalA >= 21 || totalB >= 21) {
+    const gameWinner = totalA >= 21 ? 'a' : 'b';
+    match.games.push({
+      scoreA: totalA,
+      scoreB: totalB,
+      winner: gameWinner,
+      rounds: [...match.rounds]
+    });
+
+    if (gameWinner === 'a') match.winsA++; else match.winsB++;
+    match.rounds = [];
+
+    // Check if match is over (best of 3 = first to 2)
+    if (match.winsA >= 2 || match.winsB >= 2) {
+      match.matchOver = true;
+      saveMatchResult();
+    } else {
+      match.currentGame++;
+    }
+  }
+
+  renderScoreboard();
+}
+
+function saveMatchResult() {
+  if (!match) return;
+  const results = loadResults();
+
+  // Build game scores array (include full round + throw data)
+  const gameScores = match.games.map(g => ({ scoreA: g.scoreA, scoreB: g.scoreB, winner: g.winner, rounds: g.rounds }));
+
+  // Build per-player stats snapshot
+  const playerStats = {};
+  [...match.playersA, ...match.playersB].forEach(p => {
+    if (match.playerStats[p]) playerStats[p] = { ...match.playerStats[p] };
+  });
+
+  // Remove existing result for same week+game if any
+  const idx = results.findIndex(r => r.week === match.week && r.gameSlot === match.gameSlot);
+  const result = {
+    week: match.week,
+    gameSlot: match.gameSlot,
+    teamA: match.teamA,
+    teamB: match.teamB,
+    winsA: match.winsA,
+    winsB: match.winsB,
+    gameScores,
+    playersA: match.playersA,
+    playersB: match.playersB,
+    playerStats,
+    timestamp: new Date().toISOString()
+  };
+  if (idx >= 0) results[idx] = result;
+  else results.push(result);
+
+  saveResults(results);
+}
+
+function abandonMatch() {
+  if (match && !match.matchOver) {
+    if (!confirm('End this match without saving? Any scores from this match will be lost.')) return;
+  }
+  match = null;
+  document.getElementById('scoring-phase').style.display = 'none';
+  document.getElementById('setup-phase').style.display = 'block';
+  // Reset setup
+  document.getElementById('score-week').value = '';
+  document.getElementById('score-game').innerHTML = '<option value="">-- Select game --</option>';
+  document.getElementById('setup-preview').innerHTML = '';
+  document.getElementById('start-match-btn').disabled = true;
+}
+
+// ══════════════════════════════════════════════
+//  STANDINGS
+// ══════════════════════════════════════════════
+function computeStandings() {
+  const results = loadResults();
+  const teams = {};
+  Object.keys(TEAMS).forEach(t => {
+    teams[t] = { wins: 0, losses: 0, pts: 0, matchWins: 0, matchLosses: 0, totalScored: 0, totalAllowed: 0 };
+  });
+
+  results.forEach(r => {
+    // Match-level W/L (each individual game within the best-of-3)
+    teams[r.teamA].wins += r.winsA;
+    teams[r.teamA].losses += r.winsB;
+    teams[r.teamB].wins += r.winsB;
+    teams[r.teamB].losses += r.winsA;
+
+    // Points: 2-0 sweep = 3pts, 1-1 split = 1pt each, 0-2 = 0pts
+    if (r.winsA >= 2) {
+      teams[r.teamA].pts += 3;
+      teams[r.teamA].matchWins++;
+      teams[r.teamB].matchLosses++;
+    } else if (r.winsB >= 2) {
+      teams[r.teamB].pts += 3;
+      teams[r.teamB].matchWins++;
+      teams[r.teamA].matchLosses++;
+    } else {
+      // 1-1 (shouldn't happen in best of 3 but just in case)
+      teams[r.teamA].pts += 1;
+      teams[r.teamB].pts += 1;
+    }
+
+    // Total scored/allowed for tiebreaker
+    r.gameScores.forEach(g => {
+      teams[r.teamA].totalScored += g.scoreA;
+      teams[r.teamA].totalAllowed += g.scoreB;
+      teams[r.teamB].totalScored += g.scoreB;
+      teams[r.teamB].totalAllowed += g.scoreA;
+    });
+  });
+
+  // Sort: pts desc, then win%, then point diff
+  const sorted = Object.entries(teams).sort((a, b) => {
+    if (b[1].pts !== a[1].pts) return b[1].pts - a[1].pts;
+    const wpA = a[1].wins / (a[1].wins + a[1].losses || 1);
+    const wpB = b[1].wins / (b[1].wins + b[1].losses || 1);
+    if (wpB !== wpA) return wpB - wpA;
+    const diffA = a[1].totalScored - a[1].totalAllowed;
+    const diffB = b[1].totalScored - b[1].totalAllowed;
+    return diffB - diffA;
+  });
+
+  return sorted;
+}
+
+function renderStandings() {
+  const sorted = computeStandings();
+  const container = document.getElementById('standings-container');
+
+  let html = `<table class="standings-table">
+    <thead><tr>
+      <th>#</th><th>Team</th><th class="center">MW</th><th class="center">ML</th><th class="center">GW</th><th class="center">GL</th><th class="center">PF</th><th class="center">PA</th><th class="center">Pts</th>
+    </tr></thead><tbody>`;
+
+  sorted.forEach(([name, s], i) => {
+    const t = TEAMS[name];
+    const playoffTag = i < 4 ? '<span class="playoff-tag">Playoff</span>' : '';
+    html += `<tr>
+      <td><span class="rank">${i+1}</span></td>
+      <td class="team-name-cell">${t.emoji} ${name}${playoffTag}</td>
+      <td class="center">${s.matchWins}</td>
+      <td class="center">${s.matchLosses}</td>
+      <td class="center">${s.wins}</td>
+      <td class="center">${s.losses}</td>
+      <td class="center">${s.totalScored}</td>
+      <td class="center">${s.totalAllowed}</td>
+      <td class="center"><strong>${s.pts}</strong></td>
+    </tr>`;
+  });
+
+  html += '</tbody></table>';
+  html += '<p style="text-align:center;margin-top:12px;font-size:0.8rem;color:var(--muted);">MW/ML = Match Wins/Losses &bull; GW/GL = Game Wins/Losses &bull; PF/PA = Points For/Against<br>Scoring: Sweep (2-0) = 3pts &bull; Split (1-1) = 1pt each &bull; Loss (0-2) = 0pts</p>';
+
+  // 得分王 — Individual Scoring Leaders
+  html += renderScoringLeaders();
+
+  container.innerHTML = html;
+}
+
+function renderScoringLeaders() {
+  const results = loadResults();
+  const leaders = {}; // { playerName: { team, holes, leans, boards, pts, matches } }
+
+  results.forEach(r => {
+    if (!r.playerStats) return;
+    Object.entries(r.playerStats).forEach(([name, s]) => {
+      if (!leaders[name]) {
+        // Figure out which team this player belongs to
+        const team = (r.playersA && r.playersA.includes(name)) ? r.teamA :
+                     (r.playersB && r.playersB.includes(name)) ? r.teamB : '?';
+        leaders[name] = { team, holes: 0, leans: 0, boards: 0, pts: 0, matches: 0 };
+      }
+      leaders[name].holes += s.holes || 0;
+      leaders[name].leans += s.leans || 0;
+      leaders[name].boards += s.boards || 0;
+      leaders[name].pts += s.pts || 0;
+      leaders[name].matches++;
+    });
+  });
+
+  const sorted = Object.entries(leaders).filter(([,s]) => s.pts > 0).sort((a, b) => b[1].pts - a[1].pts);
+
+  if (sorted.length === 0) return '';
+
+  let html = '<div class="section-label" style="margin-top:28px;">👑 得分王 — Scoring Leaders</div>';
+  html += '<table class="standings-table"><thead><tr><th>#</th><th>Player</th><th>Team</th><th class="center">🕳️</th><th class="center">🎯</th><th class="center">🟫</th><th class="center">Pts</th><th class="center">M</th></tr></thead><tbody>';
+
+  sorted.slice(0, 15).forEach(([name, s], i) => {
+    const emoji = TEAMS[s.team] ? TEAMS[s.team].emoji : '';
+    const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i+1}`;
+    html += `<tr><td>${medal}</td><td><strong>${name}</strong></td><td>${emoji} ${s.team}</td><td class="center">${s.holes}</td><td class="center">${s.leans}</td><td class="center">${s.boards}</td><td class="center"><strong>${s.pts}</strong></td><td class="center">${s.matches}</td></tr>`;
+  });
+
+  html += '</tbody></table>';
+  html += '<p style="text-align:center;margin-top:8px;font-size:0.75rem;color:var(--muted);">🕳️ Holes (+3) &bull; 🎯 Leans (+2) &bull; 🟫 Boards (+1) &bull; M = Matches played</p>';
+  return html;
+}
+
+// ══════════════════════════════════════════════
+//  HISTORY
+// ══════════════════════════════════════════════
+function renderHistory() {
+  const results = loadResults();
+  const container = document.getElementById('history-container');
+
+  if (results.length === 0) {
+    container.innerHTML = '<div class="no-data">No matches recorded yet. Head to the Live Score tab to get started!</div>';
+    return;
+  }
+
+  // Group by week, sort descending
+  const byWeek = {};
+  results.forEach(r => {
+    if (!byWeek[r.week]) byWeek[r.week] = [];
+    byWeek[r.week].push(r);
+  });
+
+  const weeks = Object.keys(byWeek).map(Number).sort((a, b) => b - a);
+
+  let html = '';
+  weeks.forEach(wk => {
+    const sched = SCHEDULE[wk - 1];
+    html += `<div class="history-week">`;
+    html += `<div class="history-week-header">Week ${wk} — ${sched.date}</div>`;
+
+    byWeek[wk].forEach((r, rIdx) => {
+      const tA = TEAMS[r.teamA], tB = TEAMS[r.teamB];
+      const winnerA = r.winsA > r.winsB;
+      const winnerB = r.winsB > r.winsA;
+      const matchId = `hist-${wk}-${rIdx}`;
+      const hasRounds = r.gameScores.some(g => g.rounds && g.rounds.length > 0);
+
+      html += `<div class="history-card" style="display:block;">`;
+      html += `<div style="display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:12px;">`;
+      html += `<div class="history-team ${winnerA?'winner':''}">${tA.emoji} ${r.teamA}${winnerA?' 🏆':''}</div>`;
+
+      html += `<div>`;
+      html += `<div class="history-scores">${r.winsA} — ${r.winsB}</div>`;
+      html += `<div class="history-game-scores">`;
+      r.gameScores.forEach((g, i) => {
+        const cls = g.winner === 'a' ? 'win-a' : 'win-b';
+        html += `<span class="game-score-chip ${cls}">G${i+1}: ${g.scoreA}–${g.scoreB}</span>`;
+      });
+      html += `</div></div>`;
+
+      html += `<div class="history-team right ${winnerB?'winner':''}">${winnerB?'🏆 ':''}${r.teamB} ${tB.emoji}</div>`;
+      html += `</div>`;
+
+      // Expandable round details
+      if (hasRounds) {
+        html += `<button class="history-expand-btn" onclick="document.getElementById('${matchId}').classList.toggle('open');this.textContent=this.textContent==='Show throws'?'Hide throws':'Show throws';">Show throws</button>`;
+        html += `<div id="${matchId}" class="history-rounds">`;
+        r.gameScores.forEach((g, gi) => {
+          if (!g.rounds || g.rounds.length === 0) return;
+          html += `<div style="font-weight:700;margin-top:${gi>0?'6':'0'}px;margin-bottom:3px;color:var(--accent2);">Game ${gi+1} (${g.scoreA}–${g.scoreB})</div>`;
+          html += `<div style="display:flex;justify-content:space-between;font-size:0.65rem;color:var(--muted);margin-bottom:2px;"><span style="width:24px;">Rnd</span><span style="flex:1;text-align:center;">${r.teamA}</span><span style="flex:1;text-align:center;">${r.teamB}</span><span style="width:40px;text-align:right;">Net</span></div>`;
+          g.rounds.forEach((rd, ri) => {
+            const diff = rd.a - rd.b;
+            const diffStr = diff > 0 ? `+${diff}` : diff < 0 ? `${diff}` : '0';
+            const diffColor = diff > 0 ? '#2ecc71' : diff < 0 ? '#e74c3c' : 'var(--muted)';
+            // Build throw pips
+            const pipCls = (p) => p===3?'hole':p===2?'lean':p===1?'board':p<0?'neg':'board';
+            const pipsA = rd.throws ? rd.throws.filter(t=>t.side==='a').map(t=>`<span class="throw-pip ${pipCls(t.pts)}">${t.pts>0?'+':''}${t.pts}</span>`).join('') : '';
+            const pipsB = rd.throws ? rd.throws.filter(t=>t.side==='b').map(t=>`<span class="throw-pip ${pipCls(t.pts)}">${t.pts>0?'+':''}${t.pts}</span>`).join('') : '';
+            html += `<div class="history-round-row"><span style="width:24px;color:var(--muted);">${ri+1}</span><span style="flex:1;text-align:center;">${rd.rawA} <span class="history-throw-pips">${pipsA}</span></span><span style="flex:1;text-align:center;">${rd.rawB} <span class="history-throw-pips">${pipsB}</span></span><span style="width:40px;text-align:right;font-weight:600;color:${diffColor};">${diffStr}</span></div>`;
+          });
+        });
+        html += `</div>`;
+      }
+
+      html += `</div>`;
+    });
+
+    html += `</div>`;
+  });
+
+  container.innerHTML = html;
+}
+
+// ══════════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════════
+populateWeeks();
+</script>
+
+</body>
+</html>

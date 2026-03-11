@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PCL Roster Submission</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bangers&family=Inter:wght@400;500;600;700&display=swap');
+
+  :root {
+    --bg: #fdf6ec;
+    --card: #ffffff;
+    --accent: #c0392b;
+    --accent2: #e67e22;
+    --accent3: #27ae60;
+    --dark: #2c3e50;
+    --muted: #7f8c8d;
+    --border: #e0d5c1;
+    --shadow: 0 4px 20px rgba(0,0,0,0.08);
+    --radius: 16px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--dark);
+    line-height: 1.6;
+  }
+
+  /* ── Header ── */
+  .header {
+    background: linear-gradient(135deg, #8B4513 0%, #c0392b 50%, #e67e22 100%);
+    color: white;
+    text-align: center;
+    padding: 32px 20px;
+    position: relative;
+    overflow: hidden;
+  }
+  .header::before {
+    content: '';
+    position: absolute;
+    top: -50%; left: -50%;
+    width: 200%; height: 200%;
+    background: repeating-conic-gradient(rgba(255,255,255,0.03) 0% 25%, transparent 0% 50%);
+    animation: spin 60s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .header h1 {
+    font-family: 'Bangers', cursive;
+    font-size: clamp(1.8rem, 4vw, 2.8rem);
+    letter-spacing: 2px;
+    position: relative;
+    text-shadow: 2px 2px 0 rgba(0,0,0,0.2);
+  }
+  .header .subtitle {
+    font-size: 0.95rem;
+    opacity: 0.85;
+    position: relative;
+    margin-top: 4px;
+  }
+  .back-link {
+    position: absolute;
+    top: 16px; left: 20px;
+    color: white;
+    text-decoration: none;
+    font-size: 0.85rem;
+    opacity: 0.8;
+    z-index: 10;
+    transition: opacity 0.2s;
+  }
+  .back-link:hover { opacity: 1; }
+
+  /* ── Container ── */
+  .container { max-width: 700px; margin: 0 auto; padding: 32px 20px; }
+
+  /* ── Tabs ── */
+  .tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 28px;
+    background: var(--card);
+    border-radius: 12px;
+    padding: 4px;
+    box-shadow: var(--shadow);
+  }
+  .tab-btn {
+    flex: 1;
+    padding: 12px;
+    border: none;
+    background: transparent;
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    border-radius: 10px;
+    transition: all 0.2s;
+    color: var(--muted);
+  }
+  .tab-btn.active { background: var(--accent); color: white; }
+  .tab-btn:hover:not(.active) { background: #f8f1e4; color: var(--dark); }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* ── Form ── */
+  .form-card {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 28px;
+    box-shadow: var(--shadow);
+  }
+  .form-card label {
+    display: block;
+    font-weight: 600;
+    font-size: 0.9rem;
+    margin-bottom: 6px;
+    color: var(--dark);
+  }
+  .form-card select {
+    width: 100%;
+    padding: 10px 14px;
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    font-size: 0.95rem;
+    font-family: 'Inter', sans-serif;
+    background: white;
+    margin-bottom: 18px;
+    transition: border-color 0.2s;
+    appearance: auto;
+  }
+  .form-card select:focus { outline: none; border-color: var(--accent); }
+
+  .field-group { margin-bottom: 20px; }
+  .field-group-title {
+    font-weight: 700;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--accent);
+    margin-bottom: 10px;
+  }
+  .player-checklist {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+  .player-check {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.15s;
+    font-size: 0.9rem;
+  }
+  .player-check:hover { background: #fef9f0; }
+  .player-check input[type="checkbox"] {
+    width: 18px; height: 18px;
+    accent-color: var(--accent);
+    cursor: pointer;
+  }
+  .player-check.captain-row { font-weight: 600; }
+
+  .submit-btn {
+    display: block;
+    width: 100%;
+    padding: 14px;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-weight: 700;
+    font-family: 'Bangers', cursive;
+    letter-spacing: 2px;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+    margin-top: 8px;
+  }
+  .submit-btn:hover { background: #a93226; }
+  .submit-btn:active { transform: scale(0.98); }
+  .submit-btn:disabled { background: #bbb; cursor: not-allowed; }
+
+  .form-note {
+    text-align: center;
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin-top: 10px;
+  }
+
+  /* ── Match-up info ── */
+  .matchup-info {
+    background: #f8f1e4;
+    border-radius: 12px;
+    padding: 14px 18px;
+    margin-bottom: 20px;
+    font-size: 0.9rem;
+    text-align: center;
+    border: 1px dashed var(--border);
+  }
+  .matchup-info strong { color: var(--accent); }
+  .matchup-info .bye-msg { color: var(--accent2); font-weight: 600; }
+
+  /* ── Reveal Board ── */
+  .week-section {
+    margin-bottom: 24px;
+  }
+  .week-header {
+    font-family: 'Bangers', cursive;
+    font-size: 1.3rem;
+    color: var(--accent2);
+    margin-bottom: 12px;
+    letter-spacing: 1px;
+  }
+  .game-card {
+    background: var(--card);
+    border-radius: 12px;
+    padding: 18px 20px;
+    margin-bottom: 12px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+    border-left: 4px solid var(--border);
+  }
+  .game-card.revealed { border-left-color: var(--accent3); }
+  .game-card.waiting { border-left-color: var(--accent2); }
+
+  .game-title {
+    font-weight: 700;
+    font-size: 0.95rem;
+    margin-bottom: 8px;
+  }
+  .game-rosters {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 12px;
+    align-items: start;
+  }
+  .roster-side { font-size: 0.85rem; }
+  .roster-side .team-label {
+    font-weight: 700;
+    font-size: 0.9rem;
+    margin-bottom: 4px;
+  }
+  .roster-side .players-list { color: #555; line-height: 1.7; }
+  .vs-divider {
+    font-family: 'Bangers', cursive;
+    font-size: 1.1rem;
+    color: var(--accent);
+    align-self: center;
+    text-align: center;
+  }
+  .hidden-roster {
+    color: var(--muted);
+    font-style: italic;
+    font-size: 0.85rem;
+  }
+  .waiting-badge {
+    display: inline-block;
+    background: #fff3cd;
+    color: #856404;
+    font-size: 0.75rem;
+    padding: 3px 10px;
+    border-radius: 4px;
+    font-weight: 600;
+    margin-left: 8px;
+  }
+  .revealed-badge {
+    display: inline-block;
+    background: #d4edda;
+    color: #155724;
+    font-size: 0.75rem;
+    padding: 3px 10px;
+    border-radius: 4px;
+    font-weight: 600;
+    margin-left: 8px;
+  }
+  .no-submissions {
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.9rem;
+    padding: 40px 24px;
+    background: var(--card);
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 500px) {
+    .player-checklist { grid-template-columns: 1fr; }
+    .game-rosters { grid-template-columns: 1fr; gap: 8px; }
+    .vs-divider { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<header class="header">
+  <a href="index.html" class="back-link">&larr; Back to Main</a>
+  <h1>📝 MATCH DAY ROSTER</h1>
+  <p class="subtitle">Captains: submit your lineup before each game</p>
+</header>
+
+<div class="container">
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('submit')">Submit Roster</button>
+    <button class="tab-btn" onclick="switchTab('view')">View Rosters</button>
+  </div>
+
+  <!-- ═══ SUBMIT TAB ═══ -->
+  <div id="tab-submit" class="tab-content active">
+    <div class="form-card">
+      <label for="roster-team">Your Team</label>
+      <select id="roster-team" onchange="onTeamOrWeekChange()">
+        <option value="">-- Select your team --</option>
+        <option value="Althea">🔴 Team Althea</option>
+        <option value="Justin">🔵 Team Justin</option>
+        <option value="Nana">🟣 Team Nana</option>
+        <option value="Liyu">🟢 Team Liyu</option>
+        <option value="Landice">🟠 Team Landice</option>
+      </select>
+
+      <label for="roster-week">Match Week</label>
+      <select id="roster-week" onchange="onTeamOrWeekChange()">
+        <option value="1">Wk 1 – Mar 4</option>
+        <option value="2" selected>Wk 2 – Mar 11</option>
+        <option value="3">Wk 3 – Mar 18</option>
+        <option value="4">Wk 4 – Mar 25</option>
+        <option value="5">Wk 5 – Apr 1</option>
+        <option value="6">Wk 6 – Apr 8</option>
+        <option value="7">Wk 7 – Apr 15</option>
+        <option value="8">Wk 8 – Apr 22</option>
+        <option value="9">Wk 9 – Apr 29</option>
+        <option value="10">Wk 10 – May 6</option>
+        <option value="11">Wk 11 – May 13</option>
+        <option value="12">Wk 12 – May 20</option>
+        <option value="13">Wk 13 – May 27</option>
+        <option value="14">Wk 14 – Jun 3</option>
+        <option value="15">Wk 15 – Jun 10</option>
+        <option value="16">Wk 16 – Jun 17</option>
+        <option value="17">Wk 17 – Jun 24</option>
+        <option value="18">Wk 18 – Jul 1</option>
+        <option value="19">Wk 19 – Jul 8</option>
+        <option value="20">Wk 20 – Jul 15</option>
+      </select>
+
+      <div id="matchup-display"></div>
+
+      <div class="field-group">
+        <div class="field-group-title">Select Players for This Match</div>
+        <div id="player-checklist" class="player-checklist">
+          <p style="color:var(--muted);font-size:0.85rem;grid-column:1/-1;text-align:center;">Select a team above to see players</p>
+        </div>
+      </div>
+
+      <button id="submit-btn" class="submit-btn" onclick="submitRoster()">Submit Roster 🎯</button>
+      <p class="form-note">Min. 2 players required &bull; Rosters hidden until both teams submit</p>
+    </div>
+  </div>
+
+  <!-- ═══ VIEW TAB ═══ -->
+  <div id="tab-view" class="tab-content">
+    <div id="roster-board"></div>
+  </div>
+
+</div>
+
+<script>
+// ── DATA ──
+const TEAMS = {
+  Althea:  { emoji: "🔴", captain: "Althea Gere", players: ["Alex", "Yu-tang Cheng", "Jocelin", "Aaron Chiu", "Palm", "Angela"] },
+  Justin:  { emoji: "🔵", captain: "Justin Ruan", players: ["Ann Chiang", "Jeff", "Jose Calpito", "CJ", "Rick Lee", "Oscar Shen"] },
+  Nana:    { emoji: "🟣", captain: "Nana Fu", players: ["Wen", "Kelvin Chow", "Messi Yang", "Angela Wu", "Kobe", "Amelia Hu"] },
+  Liyu:    { emoji: "🟢", captain: "Liyu", players: ["Yanbin", "Tim Chen", "Ashley Hsu", "Brad Lee", "Genie Hou", "Lawrence"] },
+  Landice: { emoji: "🟠", captain: "Landice Fu", players: ["Tinya", "Steve", "Ting-Kai", "Shannon", "Lee Heng", "Yuji"] }
+};
+
+const SCHEDULE = [
+  { wk:1,  date:"Mar 4",   g1:["Althea","Nana"],    g2:["Liyu","Landice"],   bye:"Justin" },
+  { wk:2,  date:"Mar 11",  g1:["Justin","Nana"],    g2:["Althea","Liyu"],    bye:"Landice" },
+  { wk:3,  date:"Mar 18",  g1:["Justin","Landice"], g2:["Nana","Liyu"],      bye:"Althea" },
+  { wk:4,  date:"Mar 25",  g1:["Justin","Liyu"],    g2:["Landice","Althea"], bye:"Nana" },
+  { wk:5,  date:"Apr 1",   g1:["Justin","Althea"],  g2:["Landice","Nana"],   bye:"Liyu" },
+  { wk:6,  date:"Apr 8",   g1:["Nana","Althea"],    g2:["Landice","Liyu"],   bye:"Justin" },
+  { wk:7,  date:"Apr 15",  g1:["Nana","Justin"],    g2:["Liyu","Althea"],    bye:"Landice" },
+  { wk:8,  date:"Apr 22",  g1:["Landice","Justin"], g2:["Liyu","Nana"],      bye:"Althea" },
+  { wk:9,  date:"Apr 29",  g1:["Liyu","Justin"],    g2:["Althea","Landice"], bye:"Nana" },
+  { wk:10, date:"May 6",   g1:["Althea","Justin"],  g2:["Nana","Landice"],   bye:"Liyu" },
+  { wk:11, date:"May 13",  g1:["Althea","Nana"],    g2:["Liyu","Landice"],   bye:"Justin" },
+  { wk:12, date:"May 20",  g1:["Justin","Nana"],    g2:["Althea","Liyu"],    bye:"Landice" },
+  { wk:13, date:"May 27",  g1:["Justin","Landice"], g2:["Nana","Liyu"],      bye:"Althea" },
+  { wk:14, date:"Jun 3",   g1:["Justin","Liyu"],    g2:["Landice","Althea"], bye:"Nana" },
+  { wk:15, date:"Jun 10",  g1:["Justin","Althea"],  g2:["Landice","Nana"],   bye:"Liyu" },
+  { wk:16, date:"Jun 17",  g1:["Nana","Althea"],    g2:["Landice","Liyu"],   bye:"Justin" },
+  { wk:17, date:"Jun 24",  g1:["Nana","Justin"],    g2:["Liyu","Althea"],    bye:"Landice" },
+  { wk:18, date:"Jul 1",   g1:["Landice","Justin"], g2:["Liyu","Nana"],      bye:"Althea" },
+  { wk:19, date:"Jul 8",   g1:["Liyu","Justin"],    g2:["Althea","Landice"], bye:"Nana" },
+  { wk:20, date:"Jul 15",  g1:["Althea","Justin"],  g2:["Nana","Landice"],   bye:"Liyu" }
+];
+
+// ── STATE (persisted to localStorage) ──
+const STORAGE_KEY = 'pcl_rosters';
+function loadRosters() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; }
+  catch { return {}; }
+}
+function saveRosters(data) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+}
+
+// ── TABS ──
+function switchTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  document.querySelector(`#tab-${tab}`).classList.add('active');
+  document.querySelectorAll('.tab-btn')[tab === 'submit' ? 0 : 1].classList.add('active');
+  if (tab === 'view') renderBoard();
+}
+
+// ── MATCHUP DISPLAY ──
+function getMatchupForTeam(weekNum, teamKey) {
+  const week = SCHEDULE[weekNum - 1];
+  if (!week) return null;
+  if (week.bye === teamKey) return { type: 'bye' };
+  for (const game of [week.g1, week.g2]) {
+    if (game.includes(teamKey)) {
+      const opponent = game[0] === teamKey ? game[1] : game[0];
+      return { type: 'game', opponent, game };
+    }
+  }
+  return null;
+}
+
+function onTeamOrWeekChange() {
+  updatePlayerList();
+  updateMatchupDisplay();
+  updateSubmitButton();
+}
+
+function updateMatchupDisplay() {
+  const teamKey = document.getElementById('roster-team').value;
+  const weekNum = parseInt(document.getElementById('roster-week').value);
+  const container = document.getElementById('matchup-display');
+  if (!teamKey) { container.innerHTML = ''; return; }
+
+  const matchup = getMatchupForTeam(weekNum, teamKey);
+  if (!matchup) { container.innerHTML = ''; return; }
+
+  if (matchup.type === 'bye') {
+    container.innerHTML = `<div class="matchup-info"><span class="bye-msg">Your team has a BYE this week — no game to play!</span></div>`;
+    document.getElementById('submit-btn').disabled = true;
+  } else {
+    const opp = TEAMS[matchup.opponent];
+    container.innerHTML = `<div class="matchup-info">This week's matchup: <strong>${TEAMS[teamKey].emoji} ${teamKey}</strong> vs <strong>${opp.emoji} ${matchup.opponent}</strong></div>`;
+    document.getElementById('submit-btn').disabled = false;
+  }
+}
+
+function updateSubmitButton() {
+  const teamKey = document.getElementById('roster-team').value;
+  const weekNum = document.getElementById('roster-week').value;
+  const btn = document.getElementById('submit-btn');
+  if (!teamKey) { btn.disabled = false; return; }
+
+  const rosters = loadRosters();
+  const key = `${weekNum}_${teamKey}`;
+  if (rosters[key]) {
+    btn.textContent = 'Already Submitted ✅';
+    btn.disabled = true;
+    btn.style.background = '#27ae60';
+  } else {
+    btn.textContent = 'Submit Roster 🎯';
+    btn.disabled = false;
+    btn.style.background = '';
+    const matchup = getMatchupForTeam(parseInt(weekNum), teamKey);
+    if (matchup && matchup.type === 'bye') btn.disabled = true;
+  }
+}
+
+// ── PLAYER LIST ──
+function updatePlayerList() {
+  const teamKey = document.getElementById('roster-team').value;
+  const container = document.getElementById('player-checklist');
+  if (!teamKey) {
+    container.innerHTML = '<p style="color:var(--muted);font-size:0.85rem;grid-column:1/-1;text-align:center;">Select a team to see players</p>';
+    return;
+  }
+  const team = TEAMS[teamKey];
+  let html = `<label class="player-check captain-row"><input type="checkbox" value="${team.captain}" checked> ${team.captain} ⭐</label>`;
+  team.players.forEach(p => {
+    html += `<label class="player-check"><input type="checkbox" value="${p}"> ${p}</label>`;
+  });
+  container.innerHTML = html;
+}
+
+// ── SUBMIT ──
+function submitRoster() {
+  const teamKey = document.getElementById('roster-team').value;
+  const weekNum = document.getElementById('roster-week').value;
+  if (!teamKey) { alert('Please select your team!'); return; }
+
+  const matchup = getMatchupForTeam(parseInt(weekNum), teamKey);
+  if (!matchup || matchup.type === 'bye') { alert('Your team has a bye this week!'); return; }
+
+  const checked = document.querySelectorAll('#player-checklist input[type="checkbox"]:checked');
+  const players = Array.from(checked).map(cb => cb.value);
+  if (players.length < 2) { alert('You need at least 2 players for a match!'); return; }
+
+  const rosters = loadRosters();
+  const key = `${weekNum}_${teamKey}`;
+  if (rosters[key]) { alert('Roster already submitted for this week!'); return; }
+
+  rosters[key] = { team: teamKey, week: parseInt(weekNum), players, time: new Date().toISOString() };
+  saveRosters(rosters);
+
+  // Check if opponent also submitted
+  const oppKey = `${weekNum}_${matchup.opponent}`;
+  const bothSubmitted = !!rosters[oppKey];
+
+  const btn = document.getElementById('submit-btn');
+  btn.textContent = 'Submitted! ✅';
+  btn.style.background = '#27ae60';
+  btn.disabled = true;
+
+  if (bothSubmitted) {
+    alert(`Both rosters are in! Lineups for ${teamKey} vs ${matchup.opponent} are now revealed on the View Rosters tab.`);
+  } else {
+    alert(`Roster submitted! Waiting for Team ${matchup.opponent} to submit — lineups stay hidden until then.`);
+  }
+}
+
+// ── RENDER BOARD ──
+function renderBoard() {
+  const rosters = loadRosters();
+  const board = document.getElementById('roster-board');
+  const allKeys = Object.keys(rosters);
+
+  if (allKeys.length === 0) {
+    board.innerHTML = '<div class="no-submissions">No rosters submitted yet. Captains, head to the Submit tab!</div>';
+    return;
+  }
+
+  // Group by week
+  const weekSet = new Set();
+  allKeys.forEach(k => weekSet.add(parseInt(k.split('_')[0])));
+  const weeks = Array.from(weekSet).sort((a, b) => a - b);
+
+  let html = '';
+  weeks.forEach(wk => {
+    const sched = SCHEDULE[wk - 1];
+    html += `<div class="week-section">`;
+    html += `<div class="week-header">Week ${wk} — ${sched.date}</div>`;
+
+    // Check each game
+    [sched.g1, sched.g2].forEach((game, gi) => {
+      const teamA = game[0], teamB = game[1];
+      const rosterA = rosters[`${wk}_${teamA}`];
+      const rosterB = rosters[`${wk}_${teamB}`];
+      const bothIn = rosterA && rosterB;
+      const eitherIn = rosterA || rosterB;
+
+      if (!eitherIn) return; // skip games with no submissions
+
+      const statusClass = bothIn ? 'revealed' : 'waiting';
+      const badge = bothIn
+        ? '<span class="revealed-badge">Lineups Revealed</span>'
+        : '<span class="waiting-badge">Waiting for opponent</span>';
+
+      html += `<div class="game-card ${statusClass}">`;
+      html += `<div class="game-title">Game ${gi + 1}: ${TEAMS[teamA].emoji} ${teamA} vs ${TEAMS[teamB].emoji} ${teamB} ${badge}</div>`;
+      html += `<div class="game-rosters">`;
+
+      // Team A side
+      html += `<div class="roster-side">`;
+      html += `<div class="team-label">${TEAMS[teamA].emoji} ${teamA}</div>`;
+      if (bothIn) {
+        html += `<div class="players-list">${rosterA.players.join('<br>')}</div>`;
+      } else if (rosterA) {
+        html += `<div class="hidden-roster">🔒 Roster submitted — hidden until opponent submits</div>`;
+      } else {
+        html += `<div class="hidden-roster">⏳ Not yet submitted</div>`;
+      }
+      html += `</div>`;
+
+      html += `<div class="vs-divider">VS</div>`;
+
+      // Team B side
+      html += `<div class="roster-side" style="text-align:right;">`;
+      html += `<div class="team-label">${TEAMS[teamB].emoji} ${teamB}</div>`;
+      if (bothIn) {
+        html += `<div class="players-list">${rosterB.players.join('<br>')}</div>`;
+      } else if (rosterB) {
+        html += `<div class="hidden-roster">🔒 Roster submitted — hidden until opponent submits</div>`;
+      } else {
+        html += `<div class="hidden-roster">⏳ Not yet submitted</div>`;
+      }
+      html += `</div>`;
+
+      html += `</div></div>`;
+    });
+
+    html += `</div>`;
+  });
+
+  board.innerHTML = html;
+}
+
+// ── INIT ──
+onTeamOrWeekChange();
+</script>
+
+</body>
+</html>
