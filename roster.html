@@ -60,17 +60,75 @@
     position: relative;
     margin-top: 4px;
   }
-  .back-link {
+  /* ── Hamburger Menu ── */
+  .hamburger-btn {
     position: absolute;
-    top: 16px; left: 20px;
-    color: white;
-    text-decoration: none;
-    font-size: 0.85rem;
-    opacity: 0.8;
-    z-index: 10;
-    transition: opacity 0.2s;
+    top: 16px; right: 20px;
+    width: 40px; height: 40px;
+    background: rgba(255,255,255,0.15);
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    z-index: 1010;
+    transition: background 0.2s;
   }
-  .back-link:hover { opacity: 1; }
+  .hamburger-btn:hover { background: rgba(255,255,255,0.25); }
+  .hamburger-btn span {
+    display: block;
+    width: 22px; height: 2px;
+    background: white;
+    border-radius: 2px;
+    transition: all 0.3s;
+  }
+  .hamburger-btn.open span:nth-child(1) { transform: rotate(45deg) translate(5px, 5px); }
+  .hamburger-btn.open span:nth-child(2) { opacity: 0; }
+  .hamburger-btn.open span:nth-child(3) { transform: rotate(-45deg) translate(5px, -5px); }
+  .nav-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 999;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+  }
+  .nav-overlay.open { opacity: 1; pointer-events: auto; }
+  .nav-drawer {
+    position: fixed;
+    top: 0; right: -280px;
+    width: 280px; height: 100%;
+    background: var(--card);
+    z-index: 1000;
+    box-shadow: -4px 0 20px rgba(0,0,0,0.15);
+    transition: right 0.3s;
+    padding: 80px 0 40px;
+    display: flex;
+    flex-direction: column;
+  }
+  .nav-drawer.open { right: 0; }
+  .nav-drawer a {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 28px;
+    text-decoration: none;
+    color: var(--dark);
+    font-weight: 600;
+    font-size: 0.95rem;
+    transition: background 0.15s;
+    border-left: 3px solid transparent;
+  }
+  .nav-drawer a:hover { background: #fef9f0; }
+  .nav-drawer a.active {
+    background: var(--accent);
+    color: white;
+    border-left-color: var(--accent2);
+  }
+  .nav-drawer .nav-icon { font-size: 1.2rem; width: 24px; text-align: center; }
 
   /* ── Container ── */
   .container { max-width: 700px; margin: 0 auto; padding: 32px 20px; }
@@ -540,10 +598,21 @@
 <body>
 
 <header class="header">
-  <a href="index.html" class="back-link">&larr; Back to Main</a>
+  <button class="hamburger-btn" onclick="toggleMenu()">
+    <span></span><span></span><span></span>
+  </button>
   <h1>📝 MATCH DAY ROSTER</h1>
   <p class="subtitle">Captains: submit your lineup before each game</p>
 </header>
+
+<div class="nav-overlay" onclick="toggleMenu()"></div>
+<nav class="nav-drawer">
+  <a href="index.html"><span class="nav-icon">🏠</span> Home</a>
+  <a href="roster.html" class="active"><span class="nav-icon">📋</span> Roster</a>
+  <a href="livescore.html"><span class="nav-icon">🎯</span> Live Score</a>
+  <a href="history.html"><span class="nav-icon">📜</span> Match History</a>
+  <a href="leaderboard.html"><span class="nav-icon">🏅</span> Leaderboard</a>
+</nav>
 
 <div class="container">
 
@@ -979,6 +1048,13 @@ function submitFromManage(weekNum, teamKey) {
     }
   }
   // renderManageBoard() will be called by Firebase listener
+}
+
+// ── Hamburger Menu ──
+function toggleMenu() {
+  document.querySelector('.hamburger-btn').classList.toggle('open');
+  document.querySelector('.nav-overlay').classList.toggle('open');
+  document.querySelector('.nav-drawer').classList.toggle('open');
 }
 
 // ── INIT ──
