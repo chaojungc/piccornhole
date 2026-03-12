@@ -248,6 +248,21 @@
     font-weight: 600;
   }
   .week-num { font-family: 'Bangers', cursive; font-size: 1.1rem; color: var(--accent2); }
+  .game-cell { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .game-cell .game-label { flex: 1; }
+  .game-action {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 5px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: opacity 0.2s;
+  }
+  .game-action:hover { opacity: 0.8; }
+  .game-action.result { background: #d4edda; color: #155724; }
+  .game-action.start-match { background: #fff3cd; color: #856404; }
 
   /* ── Rules ── */
   .rules-grid {
@@ -479,27 +494,7 @@
           <th>Bye</th>
         </tr>
       </thead>
-      <tbody>
-        <tr class="past-week"><td><span class="week-num">1</span></td><td>Mar 4</td><td>Althea vs Nana</td><td>Liyu vs Landice</td><td><span class="bye-badge">Justin</span></td></tr>
-        <tr class="current-week"><td><span class="week-num">2</span></td><td>Mar 11</td><td>Justin vs Nana</td><td>Althea vs Liyu</td><td><span class="bye-badge">Landice</span></td></tr>
-        <tr><td><span class="week-num">3</span></td><td>Mar 18</td><td>Justin vs Landice</td><td>Nana vs Liyu</td><td><span class="bye-badge">Althea</span></td></tr>
-        <tr><td><span class="week-num">4</span></td><td>Mar 25</td><td>Justin vs Liyu</td><td>Landice vs Althea</td><td><span class="bye-badge">Nana</span></td></tr>
-        <tr><td><span class="week-num">5</span></td><td>Apr 1</td><td>Justin vs Althea</td><td>Landice vs Nana</td><td><span class="bye-badge">Liyu</span></td></tr>
-        <tr><td><span class="week-num">6</span></td><td>Apr 8</td><td>Nana vs Althea</td><td>Landice vs Liyu</td><td><span class="bye-badge">Justin</span></td></tr>
-        <tr><td><span class="week-num">7</span></td><td>Apr 15</td><td>Nana vs Justin</td><td>Liyu vs Althea</td><td><span class="bye-badge">Landice</span></td></tr>
-        <tr><td><span class="week-num">8</span></td><td>Apr 22</td><td>Landice vs Justin</td><td>Liyu vs Nana</td><td><span class="bye-badge">Althea</span></td></tr>
-        <tr><td><span class="week-num">9</span></td><td>Apr 29</td><td>Liyu vs Justin</td><td>Althea vs Landice</td><td><span class="bye-badge">Nana</span></td></tr>
-        <tr><td><span class="week-num">10</span></td><td>May 6</td><td>Althea vs Justin</td><td>Nana vs Landice</td><td><span class="bye-badge">Liyu</span></td></tr>
-        <tr><td><span class="week-num">11</span></td><td>May 13</td><td>Althea vs Nana</td><td>Liyu vs Landice</td><td><span class="bye-badge">Justin</span></td></tr>
-        <tr><td><span class="week-num">12</span></td><td>May 20</td><td>Justin vs Nana</td><td>Althea vs Liyu</td><td><span class="bye-badge">Landice</span></td></tr>
-        <tr><td><span class="week-num">13</span></td><td>May 27</td><td>Justin vs Landice</td><td>Nana vs Liyu</td><td><span class="bye-badge">Althea</span></td></tr>
-        <tr><td><span class="week-num">14</span></td><td>Jun 3</td><td>Justin vs Liyu</td><td>Landice vs Althea</td><td><span class="bye-badge">Nana</span></td></tr>
-        <tr><td><span class="week-num">15</span></td><td>Jun 10</td><td>Justin vs Althea</td><td>Landice vs Nana</td><td><span class="bye-badge">Liyu</span></td></tr>
-        <tr><td><span class="week-num">16</span></td><td>Jun 17</td><td>Nana vs Althea</td><td>Landice vs Liyu</td><td><span class="bye-badge">Justin</span></td></tr>
-        <tr><td><span class="week-num">17</span></td><td>Jun 24</td><td>Nana vs Justin</td><td>Liyu vs Althea</td><td><span class="bye-badge">Landice</span></td></tr>
-        <tr><td><span class="week-num">18</span></td><td>Jul 1</td><td>Landice vs Justin</td><td>Liyu vs Nana</td><td><span class="bye-badge">Althea</span></td></tr>
-        <tr><td><span class="week-num">19</span></td><td>Jul 8</td><td>Liyu vs Justin</td><td>Althea vs Landice</td><td><span class="bye-badge">Nana</span></td></tr>
-        <tr><td><span class="week-num">20</span></td><td>Jul 15</td><td>Althea vs Justin</td><td>Nana vs Landice</td><td><span class="bye-badge">Liyu</span></td></tr>
+      <tbody id="schedule-body">
       </tbody>
     </table>
     </div>
@@ -595,7 +590,7 @@
 
 <script>
 // ══════════════════════════════════════════════
-//  FIREBASE CONFIG — fill in your project values
+//  FIREBASE CONFIG
 // ══════════════════════════════════════════════
 const firebaseConfig = {
   apiKey:            "AIzaSyBeXELSbgnDbLCIUGeB1hSdmOFKbs-KorI",
@@ -609,7 +604,7 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-// ── Dynamic Standings (Firebase real-time) ──
+// ── Data ──
 const TEAM_INFO = {
   Althea:  { emoji: "🔴", captain: "Althea Gere" },
   Justin:  { emoji: "🔵", captain: "Justin Ruan" },
@@ -618,6 +613,34 @@ const TEAM_INFO = {
   Landice: { emoji: "🟠", captain: "Landice Fu" }
 };
 
+const SCHEDULE = [
+  { wk:1,  date:"Mar 4",   g1:["Althea","Nana"],    g2:["Liyu","Landice"],   bye:"Justin" },
+  { wk:2,  date:"Mar 11",  g1:["Justin","Nana"],    g2:["Althea","Liyu"],    bye:"Landice" },
+  { wk:3,  date:"Mar 18",  g1:["Justin","Landice"], g2:["Nana","Liyu"],      bye:"Althea" },
+  { wk:4,  date:"Mar 25",  g1:["Justin","Liyu"],    g2:["Landice","Althea"], bye:"Nana" },
+  { wk:5,  date:"Apr 1",   g1:["Justin","Althea"],  g2:["Landice","Nana"],   bye:"Liyu" },
+  { wk:6,  date:"Apr 8",   g1:["Nana","Althea"],    g2:["Landice","Liyu"],   bye:"Justin" },
+  { wk:7,  date:"Apr 15",  g1:["Nana","Justin"],    g2:["Liyu","Althea"],    bye:"Landice" },
+  { wk:8,  date:"Apr 22",  g1:["Landice","Justin"], g2:["Liyu","Nana"],      bye:"Althea" },
+  { wk:9,  date:"Apr 29",  g1:["Liyu","Justin"],    g2:["Althea","Landice"], bye:"Nana" },
+  { wk:10, date:"May 6",   g1:["Althea","Justin"],  g2:["Nana","Landice"],   bye:"Liyu" },
+  { wk:11, date:"May 13",  g1:["Althea","Nana"],    g2:["Liyu","Landice"],   bye:"Justin" },
+  { wk:12, date:"May 20",  g1:["Justin","Nana"],    g2:["Althea","Liyu"],    bye:"Landice" },
+  { wk:13, date:"May 27",  g1:["Justin","Landice"], g2:["Nana","Liyu"],      bye:"Althea" },
+  { wk:14, date:"Jun 3",   g1:["Justin","Liyu"],    g2:["Landice","Althea"], bye:"Nana" },
+  { wk:15, date:"Jun 10",  g1:["Justin","Althea"],  g2:["Landice","Nana"],   bye:"Liyu" },
+  { wk:16, date:"Jun 17",  g1:["Nana","Althea"],    g2:["Landice","Liyu"],   bye:"Justin" },
+  { wk:17, date:"Jun 24",  g1:["Nana","Justin"],    g2:["Liyu","Althea"],    bye:"Landice" },
+  { wk:18, date:"Jul 1",   g1:["Landice","Justin"], g2:["Liyu","Nana"],      bye:"Althea" },
+  { wk:19, date:"Jul 8",   g1:["Liyu","Justin"],    g2:["Althea","Landice"], bye:"Nana" },
+  { wk:20, date:"Jul 15",  g1:["Althea","Justin"],  g2:["Nana","Landice"],   bye:"Liyu" }
+];
+
+// ── State (Firebase real-time) ──
+let _resultsCache = [];
+let _rostersCache = {};
+
+// ── Standings ──
 function renderStandings(results) {
   results = results || [];
 
@@ -636,7 +659,6 @@ function renderStandings(results) {
       teams[r.teamA].losses += 1;
       teams[r.teamB].pts += 3;
     } else {
-      // Split / incomplete — no match win/loss assigned
       teams[r.teamA].pts += 1;
       teams[r.teamB].pts += 1;
     }
@@ -663,13 +685,80 @@ function renderStandings(results) {
   }).join('');
 }
 
-// Real-time listener — standings update automatically when scores change
+// ── Schedule Table ──
+function renderSchedule() {
+  const results = _resultsCache;
+  const rosters = _rostersCache;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const year = today.getFullYear();
+
+  const tbody = document.getElementById('schedule-body');
+  tbody.innerHTML = SCHEDULE.map(s => {
+    const matchDate = new Date(`${s.date} ${year}`);
+    const isPast = matchDate < today;
+    const weekStart = new Date(matchDate);
+    const weekEnd = new Date(matchDate);
+    weekEnd.setDate(weekEnd.getDate() + 6);
+    const isCurrent = today >= weekStart && today <= weekEnd;
+
+    const rowClass = isCurrent ? 'current-week' : (isPast ? 'past-week' : '');
+
+    // Build game cells with action links
+    const g1Html = buildGameCell(s.wk, 'g1', s.g1, results, rosters);
+    const g2Html = buildGameCell(s.wk, 'g2', s.g2, results, rosters);
+
+    return `<tr class="${rowClass}">
+      <td><span class="week-num">${s.wk}</span></td>
+      <td>${s.date}</td>
+      <td>${g1Html}</td>
+      <td>${g2Html}</td>
+      <td><span class="bye-badge">${s.bye}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+function buildGameCell(weekNum, gameSlot, teams, results, rosters) {
+  const label = `${teams[0]} vs ${teams[1]}`;
+
+  // Check if match has a result
+  const result = results.find(r => r.week === weekNum && r.gameSlot === gameSlot);
+  if (result) {
+    const scoreText = `${result.winsA}–${result.winsB}`;
+    return `<div class="game-cell">
+      <span class="game-label">${label} <small style="color:var(--accent3);font-weight:700;">(${scoreText})</small></span>
+      <a href="scores.html?tab=history&week=${weekNum}" class="game-action result">Result</a>
+    </div>`;
+  }
+
+  // Check if both rosters submitted
+  const rosterA = rosters[`${weekNum}_${teams[0]}`];
+  const rosterB = rosters[`${weekNum}_${teams[1]}`];
+  if (rosterA && rosterB) {
+    return `<div class="game-cell">
+      <span class="game-label">${label}</span>
+      <a href="scores.html?tab=live&week=${weekNum}&game=${gameSlot}" class="game-action start-match">Start Match</a>
+    </div>`;
+  }
+
+  return label;
+}
+
+// ── Firebase Listeners ──
 db.ref('results').on('value', (snap) => {
-  renderStandings(snap.val() || []);
+  _resultsCache = snap.val() || [];
+  renderStandings(_resultsCache);
+  renderSchedule();
 });
 
-// Initial render with empty data (Firebase will update shortly)
+db.ref('rosters').on('value', (snap) => {
+  _rostersCache = snap.val() || {};
+  renderSchedule();
+});
+
+// Initial render
 renderStandings([]);
+renderSchedule();
 </script>
 </body>
 </html>
