@@ -1,0 +1,852 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PicCornhole League - Season 1</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bangers&family=Inter:wght@400;500;600;700&display=swap');
+
+  :root {
+    --bg: #fdf6ec;
+    --card: #ffffff;
+    --accent: #c0392b;
+    --accent2: #e67e22;
+    --accent3: #27ae60;
+    --dark: #2c3e50;
+    --muted: #7f8c8d;
+    --border: #e0d5c1;
+    --shadow: 0 4px 20px rgba(0,0,0,0.08);
+    --radius: 16px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--dark);
+    line-height: 1.6;
+  }
+
+  /* ── Hero ── */
+  .hero {
+    background: linear-gradient(135deg, #8B4513 0%, #c0392b 50%, #e67e22 100%);
+    color: white;
+    text-align: center;
+    padding: 60px 20px 50px;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: -50%; left: -50%;
+    width: 200%; height: 200%;
+    background: repeating-conic-gradient(rgba(255,255,255,0.03) 0% 25%, transparent 0% 50%);
+    animation: spin 60s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .hero h1 {
+    font-family: 'Bangers', cursive;
+    font-size: clamp(2.5rem, 6vw, 4.5rem);
+    letter-spacing: 3px;
+    position: relative;
+    text-shadow: 3px 3px 0 rgba(0,0,0,0.2);
+  }
+  .hero .subtitle {
+    font-size: 1.2rem;
+    opacity: 0.9;
+    margin-top: 8px;
+    position: relative;
+  }
+  .hero .season-badge {
+    display: inline-block;
+    background: rgba(255,255,255,0.2);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.3);
+    padding: 8px 24px;
+    border-radius: 50px;
+    margin-top: 16px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    position: relative;
+  }
+  .hero .corn-emoji { font-size: 2.5rem; position: relative; }
+
+  /* ── Nav ── */
+  nav {
+    background: var(--card);
+    border-bottom: 2px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+  }
+  nav ul {
+    display: flex;
+    justify-content: center;
+    gap: 4px;
+    list-style: none;
+    padding: 12px 16px;
+    flex-wrap: wrap;
+  }
+  nav a {
+    text-decoration: none;
+    color: var(--dark);
+    font-weight: 600;
+    font-size: 0.85rem;
+    padding: 8px 16px;
+    border-radius: 8px;
+    transition: all 0.2s;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  nav a:hover { background: var(--accent); color: white; }
+
+  /* ── Sections ── */
+  .container { max-width: 1100px; margin: 0 auto; padding: 0 20px; }
+  section { padding: 50px 0; }
+  .section-title {
+    font-family: 'Bangers', cursive;
+    font-size: 2.2rem;
+    color: var(--accent);
+    text-align: center;
+    margin-bottom: 32px;
+    letter-spacing: 2px;
+  }
+  .section-title span { color: var(--accent2); }
+
+  /* ── Timeline ── */
+  .timeline {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    justify-content: center;
+  }
+  .timeline-item {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 20px 24px;
+    box-shadow: var(--shadow);
+    flex: 1 1 180px;
+    max-width: 220px;
+    text-align: center;
+    border-top: 4px solid var(--accent);
+    transition: transform 0.2s;
+  }
+  .timeline-item:hover { transform: translateY(-4px); }
+  .timeline-item.past { opacity: 0.5; border-top-color: var(--muted); }
+  .timeline-item.current { border-top-color: var(--accent3); box-shadow: 0 4px 20px rgba(39,174,96,0.2); }
+  .timeline-date { font-weight: 700; font-size: 0.95rem; color: var(--accent); margin-bottom: 4px; }
+  .timeline-item.past .timeline-date { color: var(--muted); }
+  .timeline-item.current .timeline-date { color: var(--accent3); }
+  .timeline-label { font-size: 0.85rem; color: var(--dark); }
+  .timeline-item.current .timeline-label::after { content: ' ✅'; }
+  .timeline-item.past .timeline-label { text-decoration: line-through; }
+
+  /* ── Standings ── */
+  .standings-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    background: var(--card);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--shadow);
+  }
+  .standings-table th {
+    background: var(--dark);
+    color: white;
+    padding: 14px 16px;
+    text-align: left;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .standings-table td {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.95rem;
+  }
+  .standings-table tr:last-child td { border-bottom: none; }
+  .standings-table tr:hover td { background: #fef9f0; }
+  .rank { font-family: 'Bangers', cursive; font-size: 1.3rem; color: var(--accent2); }
+  .team-name { font-weight: 700; }
+  .captain-badge {
+    display: inline-block;
+    background: var(--accent2);
+    color: white;
+    font-size: 0.7rem;
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin-left: 8px;
+    font-weight: 600;
+    vertical-align: middle;
+  }
+
+  /* ── Teams Grid ── */
+  .teams-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+  }
+  .team-card {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 24px;
+    box-shadow: var(--shadow);
+    text-align: center;
+    border-top: 5px solid var(--accent);
+    transition: transform 0.2s;
+  }
+  .team-card:hover { transform: translateY(-4px); }
+  .team-card:nth-child(2) { border-top-color: #2980b9; }
+  .team-card:nth-child(3) { border-top-color: #8e44ad; }
+  .team-card:nth-child(4) { border-top-color: #27ae60; }
+  .team-card:nth-child(5) { border-top-color: #e67e22; }
+  .team-card .team-emoji { font-size: 2.5rem; margin-bottom: 8px; }
+  .team-card h3 { font-family: 'Bangers', cursive; font-size: 1.4rem; letter-spacing: 1px; margin-bottom: 4px; }
+  .team-card .captain { font-size: 0.85rem; color: var(--accent2); font-weight: 600; margin-bottom: 12px; }
+  .team-card .players { font-size: 0.82rem; color: var(--muted); line-height: 1.8; }
+
+  /* ── Schedule ── */
+  .schedule-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    background: var(--card);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    font-size: 0.9rem;
+  }
+  .schedule-table th {
+    background: var(--accent);
+    color: white;
+    padding: 12px 14px;
+    text-align: left;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .schedule-table td {
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--border);
+  }
+  .schedule-table tr:last-child td { border-bottom: none; }
+  .schedule-table tr:hover td { background: #fef9f0; }
+  .schedule-table tr.current-week td { background: #eafaf1; font-weight: 600; }
+  .schedule-table tr.past-week td { color: var(--muted); }
+  .bye-badge {
+    display: inline-block;
+    background: #f0e6d3;
+    color: #8B6914;
+    font-size: 0.75rem;
+    padding: 2px 10px;
+    border-radius: 4px;
+    font-weight: 600;
+  }
+  .week-num { font-family: 'Bangers', cursive; font-size: 1.1rem; color: var(--accent2); }
+  .game-cell { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .game-cell .game-label { flex: 1; }
+  .game-action {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 5px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: opacity 0.2s;
+  }
+  .game-action:hover { opacity: 0.8; }
+  .game-action.result { background: #d4edda; color: #155724; }
+  .game-action.start-match { background: #fff3cd; color: #856404; }
+
+  /* ── Rules ── */
+  .rules-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+  }
+  .rule-card {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 28px;
+    box-shadow: var(--shadow);
+  }
+  .rule-card h3 {
+    font-family: 'Bangers', cursive;
+    font-size: 1.3rem;
+    color: var(--accent);
+    margin-bottom: 12px;
+    letter-spacing: 1px;
+  }
+  .rule-card p, .rule-card li {
+    font-size: 0.9rem;
+    color: #555;
+    line-height: 1.7;
+  }
+  .rule-card ul { padding-left: 20px; }
+  .rule-card li { margin-bottom: 6px; }
+
+  .points-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 12px;
+  }
+  .points-table th, .points-table td {
+    padding: 8px 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.85rem;
+  }
+  .points-table th { font-weight: 700; color: var(--dark); }
+  .pts { font-family: 'Bangers', cursive; font-size: 1.1rem; color: var(--accent3); }
+
+  /* ── Playoffs ── */
+  .playoff-bracket {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 32px;
+    box-shadow: var(--shadow);
+    text-align: center;
+  }
+  .playoff-flow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-top: 20px;
+  }
+  .playoff-box {
+    background: #f8f1e4;
+    border: 2px dashed var(--border);
+    border-radius: 12px;
+    padding: 16px 24px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    min-width: 160px;
+  }
+  .playoff-box.final { border-color: var(--accent); background: #fde8e4; }
+  .playoff-box.champ { border-color: gold; background: #fff9e6; border-style: solid; }
+  .playoff-arrow { font-size: 1.5rem; color: var(--accent2); }
+
+  /* ── Footer ── */
+  footer {
+    text-align: center;
+    padding: 30px 20px;
+    color: var(--muted);
+    font-size: 0.8rem;
+    border-top: 1px solid var(--border);
+    margin-top: 20px;
+  }
+
+  /* ── Hamburger Menu ── */
+  .hamburger-btn {
+    position: absolute;
+    top: 16px; left: 20px;
+    width: 40px; height: 40px;
+    background: rgba(255,255,255,0.15);
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    z-index: 1010;
+    transition: background 0.2s;
+  }
+  .hamburger-btn:hover { background: rgba(255,255,255,0.25); }
+  .hamburger-btn span {
+    display: block;
+    width: 22px; height: 2px;
+    background: white;
+    border-radius: 2px;
+    transition: all 0.3s;
+  }
+  .hamburger-btn.open span:nth-child(1) { transform: rotate(45deg) translate(5px, 5px); }
+  .hamburger-btn.open span:nth-child(2) { opacity: 0; }
+  .hamburger-btn.open span:nth-child(3) { transform: rotate(-45deg) translate(5px, -5px); }
+  .nav-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 999;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+  }
+  .nav-overlay.open { opacity: 1; pointer-events: auto; }
+  .nav-drawer {
+    position: fixed;
+    top: 0; left: -280px;
+    width: 280px; height: 100%;
+    background: var(--card);
+    z-index: 1000;
+    box-shadow: 4px 0 20px rgba(0,0,0,0.15);
+    transition: left 0.3s;
+    padding: 80px 0 40px;
+    display: flex;
+    flex-direction: column;
+  }
+  .nav-drawer.open { left: 0; }
+  .nav-drawer a {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 28px;
+    text-decoration: none;
+    color: var(--dark);
+    font-weight: 600;
+    font-size: 0.95rem;
+    transition: background 0.15s;
+    border-left: 3px solid transparent;
+  }
+  .nav-drawer a:hover { background: #fef9f0; }
+  .nav-drawer a.active {
+    background: var(--accent);
+    color: white;
+    border-left-color: var(--accent2);
+  }
+  .nav-drawer .nav-icon { font-size: 1.2rem; width: 24px; text-align: center; }
+
+  /* ── Responsive ── */
+  @media (max-width: 600px) {
+    .hero { padding: 40px 16px 36px; }
+    .hero h1 { font-size: 2.2rem; }
+    nav ul { gap: 2px; }
+    nav a { font-size: 0.75rem; padding: 6px 10px; }
+    .schedule-table { font-size: 0.8rem; }
+    .schedule-table th, .schedule-table td { padding: 8px 8px; }
+    .playoff-flow { flex-direction: column; }
+    .playoff-arrow { transform: rotate(90deg); }
+  }
+</style>
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
+</head>
+<body>
+
+<!-- ═══════ HERO ═══════ -->
+<header class="hero">
+  <button class="hamburger-btn" onclick="toggleMenu()">
+    <span></span><span></span><span></span>
+  </button>
+  <div class="corn-emoji">🌽🎯</div>
+  <h1>PICCOLLAGE CORNHOLE LEAGUE</h1>
+  <p class="subtitle">Toss bags. Talk trash. Win glory.</p>
+  <div class="season-badge">🏆 Season 1 &mdash; 2026</div>
+</header>
+
+<div class="nav-overlay" onclick="toggleMenu()"></div>
+<nav class="nav-drawer">
+  <a href="index.html" class="active"><span class="nav-icon">🏠</span> Home</a>
+  <a href="roster.html"><span class="nav-icon">📋</span> Roster</a>
+  <a href="livescore.html"><span class="nav-icon">🎯</span> Live Score</a>
+  <a href="history.html"><span class="nav-icon">📜</span> Match History</a>
+  <a href="leaderboard.html"><span class="nav-icon">🏅</span> Leaderboard</a>
+</nav>
+
+<!-- ═══════ NAV ═══════ -->
+<nav>
+  <ul>
+    <li><a href="#timeline">Timeline</a></li>
+    <li><a href="#standings">Standings</a></li>
+    <li><a href="#teams">Teams</a></li>
+    <li><a href="#schedule">Schedule</a></li>
+    <li><a href="roster.html">Roster</a></li>
+    <li><a href="#rules">Rules</a></li>
+    <li><a href="#playoffs">Playoffs</a></li>
+  </ul>
+</nav>
+
+<!-- ═══════ TIMELINE ═══════ -->
+<section id="timeline">
+  <div class="container">
+    <h2 class="section-title">📅 Season <span>Timeline</span></h2>
+    <div class="timeline">
+      <div class="timeline-item past">
+        <div class="timeline-date">Jan 30</div>
+        <div class="timeline-label">Announcement Meeting</div>
+      </div>
+      <div class="timeline-item past">
+        <div class="timeline-date">Feb 10</div>
+        <div class="timeline-label">PCL Combine</div>
+      </div>
+      <div class="timeline-item past">
+        <div class="timeline-date">Feb 11</div>
+        <div class="timeline-label">Player Draft</div>
+      </div>
+      <div class="timeline-item current">
+        <div class="timeline-date">Mar 4</div>
+        <div class="timeline-label">Regular Season</div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-date">Jul 15</div>
+        <div class="timeline-label">Playoffs</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ STANDINGS ═══════ -->
+<section id="standings" style="background: #f8f1e4;">
+  <div class="container">
+    <h2 class="section-title">🏅 Current <span>Standings</span></h2>
+    <div id="standings-table-container">
+    <table class="standings-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Team</th>
+          <th>Captain</th>
+          <th>W</th>
+          <th>L</th>
+          <th>Pts</th>
+        </tr>
+      </thead>
+      <tbody id="standings-body">
+      </tbody>
+    </table>
+    </div>
+    <p style="text-align:center;margin-top:10px;font-size:0.8rem;"><a href="leaderboard.html" style="color:var(--accent);font-weight:600;text-decoration:none;">View full leaderboard →</a></p>
+  </div>
+</section>
+
+<!-- ═══════ TEAMS ═══════ -->
+<section id="teams">
+  <div class="container">
+    <h2 class="section-title">👥 Meet the <span>Teams</span></h2>
+    <div class="teams-grid">
+      <div class="team-card">
+        <div class="team-emoji">🔴</div>
+        <h3>Team Althea</h3>
+        <div class="captain">Captain: Althea Gere</div>
+        <div class="players">Alex<br>Yu-tang Cheng<br>Jocelin<br>Aaron Chiu<br>Palm<br>Angela</div>
+      </div>
+      <div class="team-card">
+        <div class="team-emoji">🔵</div>
+        <h3>Team Justin</h3>
+        <div class="captain">Captain: Justin Ruan</div>
+        <div class="players">Ann Chiang<br>Jeff<br>Jose Calpito<br>CJ<br>Rick Lee<br>Oscar Shen</div>
+      </div>
+      <div class="team-card">
+        <div class="team-emoji">🟣</div>
+        <h3>Team Nana</h3>
+        <div class="captain">Captain: Nana Fu</div>
+        <div class="players">Wen<br>Kelvin Chow<br>Messi Yang<br>Angela Wu<br>Kobe<br>Amelia Hu</div>
+      </div>
+      <div class="team-card">
+        <div class="team-emoji">🟢</div>
+        <h3>Team Liyu</h3>
+        <div class="captain">Captain: Liyu</div>
+        <div class="players">Yanbin<br>Tim Chen<br>Ashley Hsu<br>Brad Lee<br>Genie Hou<br>Lawrence</div>
+      </div>
+      <div class="team-card">
+        <div class="team-emoji">🟠</div>
+        <h3>Team Landice</h3>
+        <div class="captain">Captain: Landice Fu</div>
+        <div class="players">Tinya<br>Steve<br>Ting-Kai<br>Shannon<br>Lee Heng<br>Yuji</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ SCHEDULE ═══════ -->
+<section id="schedule" style="background: #f8f1e4;">
+  <div class="container">
+    <h2 class="section-title">📋 Full <span>Schedule</span></h2>
+    <p style="text-align:center;margin-bottom:20px;color:var(--muted);font-size:0.9rem;">
+      5 Teams &bull; 2 Games/Week &bull; 20 Weeks &bull; 16 Games per Team &bull; Wednesdays at Noon
+    </p>
+    <div style="overflow-x:auto;">
+    <table class="schedule-table">
+      <thead>
+        <tr>
+          <th>Week</th>
+          <th>Date</th>
+          <th>Game 1</th>
+          <th>Game 2</th>
+          <th>Bye</th>
+        </tr>
+      </thead>
+      <tbody id="schedule-body">
+      </tbody>
+    </table>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ RULES ═══════ -->
+<section id="rules">
+  <div class="container">
+    <h2 class="section-title">📖 League <span>Rules</span></h2>
+    <div class="rules-grid">
+      <div class="rule-card">
+        <h3>🎯 Match Format</h3>
+        <p>Each match is a <strong>best-of-three</strong> series played every <strong>Wednesday at noon</strong>. Two games are played each week (one team gets a bye).</p>
+        <p style="margin-top:8px;">Matches may be rescheduled due to holidays or weather.</p>
+      </div>
+      <div class="rule-card">
+        <h3>⭐ Scoring System</h3>
+        <table class="points-table">
+          <tr><th>Result</th><th>Points</th></tr>
+          <tr><td>2 wins (sweep)</td><td><span class="pts">3 pts</span></td></tr>
+          <tr><td>1 win</td><td><span class="pts">1 pt</span></td></tr>
+          <tr><td>0 wins</td><td><span class="pts">0 pts</span></td></tr>
+          <tr><td>No show</td><td><span class="pts">0 pts</span></td></tr>
+        </table>
+      </div>
+      <div class="rule-card">
+        <h3>👥 Participation</h3>
+        <ul>
+          <li>Each team must field <strong>at least 2 players</strong> per match.</li>
+          <li>Every player must play in <strong>at least 2 matches</strong> per season.</li>
+          <li>Teams have 7 members each (5 teams, 35 total players).</li>
+        </ul>
+      </div>
+      <div class="rule-card">
+        <h3>💰 Entry &amp; Prize</h3>
+        <p><strong>300 NTD</strong> per person per season. The entire prize pool goes to the champion team!</p>
+        <p style="margin-top:8px;font-size:0.85rem;color:var(--muted);">Total prize pool: 10,500 NTD</p>
+      </div>
+      <div class="rule-card">
+        <h3>🔄 Draft Process</h3>
+        <ul>
+          <li>A <strong>Throwing Combine</strong> (skill showcase) lets captains scout players.</li>
+          <li>Captains compete to determine draft order.</li>
+          <li><strong>Snake draft</strong>: 1→2→3→4→5→5→4→3→2→1</li>
+        </ul>
+      </div>
+      <div class="rule-card">
+        <h3>📊 Season Format</h3>
+        <ul>
+          <li>20-week regular season (Mar 4 – Jul 15)</li>
+          <li>Each team plays 16 games total</li>
+          <li>Top 4 teams advance to playoffs</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ PLAYOFFS ═══════ -->
+<section id="playoffs" style="background: #f8f1e4;">
+  <div class="container">
+    <h2 class="section-title">🏆 Playoff <span>Format</span></h2>
+    <div class="playoff-bracket">
+      <p style="font-size:0.95rem;margin-bottom:12px;color:#555;">Top seed advances directly to the Finals. Bottom seed is eliminated. Seeds 2–4 play a three-way playoff.</p>
+      <div class="playoff-flow">
+        <div class="playoff-box">
+          🥇 #1 Seed<br><small>→ Straight to Finals</small>
+        </div>
+        <div class="playoff-arrow">➡️</div>
+        <div class="playoff-box final">
+          🏟️ Finals<br><small>#1 vs Playoff Winner</small>
+        </div>
+        <div class="playoff-arrow">➡️</div>
+        <div class="playoff-box champ">
+          🏆 Champion<br><small>Wins the prize pool!</small>
+        </div>
+      </div>
+      <div style="margin-top:24px;padding:16px;background:#f8f1e4;border-radius:12px;">
+        <p style="font-size:0.85rem;color:#555;"><strong>Three-Way Playoff:</strong> Seeds #2, #3, #4 compete — the team that wins the most matches advances to the Finals.</p>
+        <p style="font-size:0.82rem;color:var(--muted);margin-top:6px;"><strong>Tiebreakers:</strong> Regular season — highest winning percentage. Playoffs — total winning score across matches.</p>
+        <p style="font-size:0.82rem;color:var(--muted);margin-top:4px;"><strong>#5 seed</strong> does not qualify for the playoffs.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ FOOTER ═══════ -->
+<footer>
+  <p>🌽 PicCollage Cornhole League &bull; Season 1 &bull; 2026</p>
+  <p style="margin-top:4px;">Toss responsibly. May the best team win.</p>
+</footer>
+
+<script>
+// ══════════════════════════════════════════════
+//  FIREBASE CONFIG
+// ══════════════════════════════════════════════
+const firebaseConfig = {
+  apiKey:            "AIzaSyBeXELSbgnDbLCIUGeB1hSdmOFKbs-KorI",
+  authDomain:        "piccornhole.firebaseapp.com",
+  databaseURL:       "https://piccornhole-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId:         "piccornhole",
+  storageBucket:     "piccornhole.firebasestorage.app",
+  messagingSenderId: "1005077269160",
+  appId:             "1:1005077269160:web:d724b5f66eeb44145a109d"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+// ── Data ──
+const TEAM_INFO = {
+  Althea:  { emoji: "🔴", captain: "Althea Gere" },
+  Justin:  { emoji: "🔵", captain: "Justin Ruan" },
+  Nana:    { emoji: "🟣", captain: "Nana Fu" },
+  Liyu:    { emoji: "🟢", captain: "Liyu" },
+  Landice: { emoji: "🟠", captain: "Landice Fu" }
+};
+
+const SCHEDULE = [
+  { wk:1,  date:"Mar 4",   g1:["Althea","Nana"],    g2:["Liyu","Landice"],   bye:"Justin" },
+  { wk:2,  date:"Mar 11",  g1:["Justin","Nana"],    g2:["Althea","Liyu"],    bye:"Landice" },
+  { wk:3,  date:"Mar 18",  g1:["Justin","Landice"], g2:["Nana","Liyu"],      bye:"Althea" },
+  { wk:4,  date:"Mar 25",  g1:["Justin","Liyu"],    g2:["Landice","Althea"], bye:"Nana" },
+  { wk:5,  date:"Apr 1",   g1:["Justin","Althea"],  g2:["Landice","Nana"],   bye:"Liyu" },
+  { wk:6,  date:"Apr 8",   g1:["Nana","Althea"],    g2:["Landice","Liyu"],   bye:"Justin" },
+  { wk:7,  date:"Apr 15",  g1:["Nana","Justin"],    g2:["Liyu","Althea"],    bye:"Landice" },
+  { wk:8,  date:"Apr 22",  g1:["Landice","Justin"], g2:["Liyu","Nana"],      bye:"Althea" },
+  { wk:9,  date:"Apr 29",  g1:["Liyu","Justin"],    g2:["Althea","Landice"], bye:"Nana" },
+  { wk:10, date:"May 6",   g1:["Althea","Justin"],  g2:["Nana","Landice"],   bye:"Liyu" },
+  { wk:11, date:"May 13",  g1:["Althea","Nana"],    g2:["Liyu","Landice"],   bye:"Justin" },
+  { wk:12, date:"May 20",  g1:["Justin","Nana"],    g2:["Althea","Liyu"],    bye:"Landice" },
+  { wk:13, date:"May 27",  g1:["Justin","Landice"], g2:["Nana","Liyu"],      bye:"Althea" },
+  { wk:14, date:"Jun 3",   g1:["Justin","Liyu"],    g2:["Landice","Althea"], bye:"Nana" },
+  { wk:15, date:"Jun 10",  g1:["Justin","Althea"],  g2:["Landice","Nana"],   bye:"Liyu" },
+  { wk:16, date:"Jun 17",  g1:["Nana","Althea"],    g2:["Landice","Liyu"],   bye:"Justin" },
+  { wk:17, date:"Jun 24",  g1:["Nana","Justin"],    g2:["Liyu","Althea"],    bye:"Landice" },
+  { wk:18, date:"Jul 1",   g1:["Landice","Justin"], g2:["Liyu","Nana"],      bye:"Althea" },
+  { wk:19, date:"Jul 8",   g1:["Liyu","Justin"],    g2:["Althea","Landice"], bye:"Nana" },
+  { wk:20, date:"Jul 15",  g1:["Althea","Justin"],  g2:["Nana","Landice"],   bye:"Liyu" }
+];
+
+// ── State (Firebase real-time) ──
+let _resultsCache = [];
+let _rostersCache = {};
+
+// ── Standings ──
+function renderStandings(results) {
+  results = results || [];
+
+  const teams = {};
+  Object.keys(TEAM_INFO).forEach(t => {
+    teams[t] = { wins: 0, losses: 0, pts: 0 };
+  });
+
+  results.forEach(r => {
+    if (r.winsA >= 2) {
+      teams[r.teamA].wins += 1;
+      teams[r.teamB].losses += 1;
+      teams[r.teamA].pts += 3;
+    } else if (r.winsB >= 2) {
+      teams[r.teamB].wins += 1;
+      teams[r.teamA].losses += 1;
+      teams[r.teamB].pts += 3;
+    } else {
+      teams[r.teamA].pts += 1;
+      teams[r.teamB].pts += 1;
+    }
+  });
+
+  const sorted = Object.entries(teams).sort((a, b) => {
+    if (b[1].pts !== a[1].pts) return b[1].pts - a[1].pts;
+    const wpA = a[1].wins / (a[1].wins + a[1].losses || 1);
+    const wpB = b[1].wins / (b[1].wins + b[1].losses || 1);
+    return wpB - wpA;
+  });
+
+  const tbody = document.getElementById('standings-body');
+  tbody.innerHTML = sorted.map(([name, s], i) => {
+    const t = TEAM_INFO[name];
+    return `<tr>
+      <td><span class="rank">${i+1}</span></td>
+      <td class="team-name">${t.emoji} Team ${name}</td>
+      <td>${t.captain} <span class="captain-badge">CPT</span></td>
+      <td>${s.wins}</td>
+      <td>${s.losses}</td>
+      <td><strong>${s.pts}</strong></td>
+    </tr>`;
+  }).join('');
+}
+
+// ── Schedule Table ──
+function renderSchedule() {
+  const results = _resultsCache;
+  const rosters = _rostersCache;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const year = today.getFullYear();
+
+  const tbody = document.getElementById('schedule-body');
+  tbody.innerHTML = SCHEDULE.map(s => {
+    const matchDate = new Date(`${s.date} ${year}`);
+    const isPast = matchDate < today;
+    const weekStart = new Date(matchDate);
+    const weekEnd = new Date(matchDate);
+    weekEnd.setDate(weekEnd.getDate() + 6);
+    const isCurrent = today >= weekStart && today <= weekEnd;
+
+    const rowClass = isCurrent ? 'current-week' : (isPast ? 'past-week' : '');
+
+    // Build game cells with action links
+    const g1Html = buildGameCell(s.wk, 'g1', s.g1, results, rosters);
+    const g2Html = buildGameCell(s.wk, 'g2', s.g2, results, rosters);
+
+    return `<tr class="${rowClass}">
+      <td><span class="week-num">${s.wk}</span></td>
+      <td>${s.date}</td>
+      <td>${g1Html}</td>
+      <td>${g2Html}</td>
+      <td><span class="bye-badge">${s.bye}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+function buildGameCell(weekNum, gameSlot, teams, results, rosters) {
+  const label = `${teams[0]} vs ${teams[1]}`;
+
+  // Check if match has a result
+  const result = results.find(r => r.week === weekNum && r.gameSlot === gameSlot);
+  if (result) {
+    const scoreText = `${result.winsA}–${result.winsB}`;
+    return `<div class="game-cell">
+      <span class="game-label">${label} <small style="color:var(--accent3);font-weight:700;">(${scoreText})</small></span>
+      <a href="history.html?week=${weekNum}" class="game-action result">Result</a>
+    </div>`;
+  }
+
+  // Check if both rosters submitted
+  const rosterA = rosters[`${weekNum}_${teams[0]}`];
+  const rosterB = rosters[`${weekNum}_${teams[1]}`];
+  if (rosterA && rosterB) {
+    return `<div class="game-cell">
+      <span class="game-label">${label}</span>
+      <a href="livescore.html?week=${weekNum}&game=${gameSlot}" class="game-action start-match">Start Match</a>
+    </div>`;
+  }
+
+  return label;
+}
+
+// ── Firebase Listeners ──
+db.ref('results').on('value', (snap) => {
+  _resultsCache = snap.val() || [];
+  renderStandings(_resultsCache);
+  renderSchedule();
+});
+
+db.ref('rosters').on('value', (snap) => {
+  _rostersCache = snap.val() || {};
+  renderSchedule();
+});
+
+// ── Hamburger Menu ──
+function toggleMenu() {
+  document.querySelector('.hamburger-btn').classList.toggle('open');
+  document.querySelector('.nav-overlay').classList.toggle('open');
+  document.querySelector('.nav-drawer').classList.toggle('open');
+}
+
+// Initial render
+renderStandings([]);
+renderSchedule();
+</script>
+</body>
+</html>
