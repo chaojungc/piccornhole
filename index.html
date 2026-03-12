@@ -347,7 +347,7 @@
   /* ── Hamburger Menu ── */
   .hamburger-btn {
     position: absolute;
-    top: 16px; right: 20px;
+    top: 16px; left: 20px;
     width: 40px; height: 40px;
     background: rgba(255,255,255,0.15);
     border: none;
@@ -383,17 +383,17 @@
   .nav-overlay.open { opacity: 1; pointer-events: auto; }
   .nav-drawer {
     position: fixed;
-    top: 0; right: -280px;
+    top: 0; left: -280px;
     width: 280px; height: 100%;
     background: var(--card);
     z-index: 1000;
-    box-shadow: -4px 0 20px rgba(0,0,0,0.15);
-    transition: right 0.3s;
+    box-shadow: 4px 0 20px rgba(0,0,0,0.15);
+    transition: left 0.3s;
     padding: 80px 0 40px;
     display: flex;
     flex-direction: column;
   }
-  .nav-drawer.open { right: 0; }
+  .nav-drawer.open { left: 0; }
   .nav-drawer a {
     display: flex;
     align-items: center;

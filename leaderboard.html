@@ -64,7 +64,7 @@
   /* ── Hamburger Menu ── */
   .hamburger-btn {
     position: absolute;
-    top: 16px; right: 20px;
+    top: 16px; left: 20px;
     z-index: 1001;
     background: rgba(255,255,255,0.15);
     border: 1px solid rgba(255,255,255,0.3);
@@ -102,16 +102,16 @@
 
   .nav-drawer {
     position: fixed;
-    top: 0; right: -280px;
+    top: 0; left: -280px;
     width: 280px; height: 100%;
     background: var(--card);
     z-index: 1000;
-    transition: right 0.3s ease;
-    box-shadow: -4px 0 20px rgba(0,0,0,0.15);
+    transition: left 0.3s ease;
+    box-shadow: 4px 0 20px rgba(0,0,0,0.15);
     padding: 72px 24px 24px;
     overflow-y: auto;
   }
-  .nav-drawer.open { right: 0; }
+  .nav-drawer.open { left: 0; }
   .nav-drawer a {
     display: flex;
     align-items: center;
