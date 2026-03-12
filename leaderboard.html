@@ -193,9 +193,60 @@
     box-shadow: var(--shadow);
   }
 
+  /* ── Expandable player rows ── */
+  .player-row { cursor: pointer; user-select: none; }
+  .player-row:hover td { background: #fef3e0; }
+  .expand-arrow {
+    display: inline-block;
+    font-size: 0.7rem;
+    margin-left: 6px;
+    transition: transform 0.2s;
+    color: var(--muted);
+  }
+  .player-row.expanded .expand-arrow { transform: rotate(90deg); }
+  .game-detail-row td {
+    padding: 0 !important;
+    border-bottom: 1px solid var(--border);
+    background: #fdf8f0;
+  }
+  .game-detail-row:last-child td { border-bottom: 1px solid var(--border); }
+  .game-detail-inner {
+    padding: 10px 14px 10px 48px;
+    font-size: 0.82rem;
+    color: #555;
+  }
+  .match-detail {
+    padding: 6px 0;
+    border-bottom: 1px dashed #e8dcc8;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  .match-detail:last-child { border-bottom: none; }
+  .match-detail .match-label {
+    font-weight: 600;
+    color: var(--dark);
+    font-size: 0.82rem;
+  }
+  .match-detail .match-stats {
+    display: flex;
+    gap: 12px;
+    font-size: 0.8rem;
+    color: var(--muted);
+  }
+  .match-detail .match-pts {
+    font-weight: 700;
+    color: var(--accent);
+    min-width: 45px;
+    text-align: right;
+  }
+
   /* ── Responsive ── */
   @media (max-width: 550px) {
     .standings-table th, .standings-table td { padding: 8px 6px; font-size: 0.8rem; }
+    .game-detail-inner { padding-left: 28px; }
   }
 </style>
 <!-- Firebase SDK -->
@@ -358,31 +409,85 @@ function renderScoringLeaders() {
       if (!leaders[name]) {
         const team = (r.playersA && r.playersA.includes(name)) ? r.teamA :
                      (r.playersB && r.playersB.includes(name)) ? r.teamB : '?';
-        leaders[name] = { team, holes: 0, leans: 0, boards: 0, pts: 0, matches: 0 };
+        leaders[name] = { team, holes: 0, leans: 0, boards: 0, pts: 0, matches: 0, matchDetails: [] };
       }
       leaders[name].holes += s.holes || 0;
       leaders[name].leans += s.leans || 0;
       leaders[name].boards += s.boards || 0;
       leaders[name].pts += s.pts || 0;
       leaders[name].matches++;
+      // Store per-match detail for dropdown
+      const opponent = (r.playersA && r.playersA.includes(name)) ? r.teamB : r.teamA;
+      leaders[name].matchDetails.push({
+        week: r.week,
+        opponent,
+        holes: s.holes || 0,
+        leans: s.leans || 0,
+        boards: s.boards || 0,
+        pts: s.pts || 0
+      });
     });
   });
 
-  const sorted = Object.entries(leaders).filter(([,s]) => s.pts > 0).sort((a, b) => b[1].pts - a[1].pts);
+  // Sort by average PTS per match (highest first)
+  const sorted = Object.entries(leaders).filter(([,s]) => s.pts > 0).sort((a, b) => {
+    const avgA = a[1].pts / (a[1].matches || 1);
+    const avgB = b[1].pts / (b[1].matches || 1);
+    if (avgB !== avgA) return avgB - avgA;
+    return b[1].pts - a[1].pts; // tiebreak: total pts
+  });
   if (sorted.length === 0) return '';
 
   let html = '<div class="section-label" style="margin-top:28px;">👑 得分王 — Scoring Leaders</div>';
-  html += '<table class="standings-table"><thead><tr><th>#</th><th>Player</th><th>Team</th><th class="center">🕳️</th><th class="center">🎯</th><th class="center">🟫</th><th class="center">Pts</th><th class="center">M</th></tr></thead><tbody>';
+  html += '<table class="standings-table"><thead><tr><th>#</th><th>Player</th><th>Team</th><th class="center">🕳️</th><th class="center">🎯</th><th class="center">🟫</th><th class="center">PTS</th><th class="center">M</th></tr></thead><tbody>';
 
   sorted.slice(0, 15).forEach(([name, s], i) => {
     const emoji = TEAMS[s.team] ? TEAMS[s.team].emoji : '';
     const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i+1}`;
-    html += `<tr><td>${medal}</td><td><strong>${name}</strong></td><td>${emoji} ${s.team}</td><td class="center">${s.holes}</td><td class="center">${s.leans}</td><td class="center">${s.boards}</td><td class="center"><strong>${s.pts}</strong></td><td class="center">${s.matches}</td></tr>`;
+    const avgPts = (s.pts / (s.matches || 1)).toFixed(1);
+    const rowId = `player-${i}`;
+
+    // Main player row (clickable)
+    html += `<tr class="player-row" id="${rowId}" onclick="togglePlayerDetail('${rowId}')">
+      <td>${medal}</td>
+      <td><strong>${name}</strong><span class="expand-arrow">&#9654;</span></td>
+      <td>${emoji} ${s.team}</td>
+      <td class="center">${s.holes}</td>
+      <td class="center">${s.leans}</td>
+      <td class="center">${s.boards}</td>
+      <td class="center"><strong>${avgPts}</strong></td>
+      <td class="center">${s.matches}</td>
+    </tr>`;
+
+    // Hidden detail row with per-match breakdown
+    html += `<tr class="game-detail-row" id="${rowId}-detail" style="display:none;"><td colspan="8"><div class="game-detail-inner">`;
+    s.matchDetails.sort((a, b) => a.week - b.week).forEach(m => {
+      const oppEmoji = TEAMS[m.opponent] ? TEAMS[m.opponent].emoji : '';
+      html += `<div class="match-detail">
+        <span class="match-label">Wk ${m.week} vs ${oppEmoji} ${m.opponent}</span>
+        <span class="match-stats">
+          <span>🕳️${m.holes}</span>
+          <span>🎯${m.leans}</span>
+          <span>🟫${m.boards}</span>
+          <span class="match-pts">${m.pts} pts</span>
+        </span>
+      </div>`;
+    });
+    html += '</div></td></tr>';
   });
 
   html += '</tbody></table>';
-  html += '<p style="text-align:center;margin-top:8px;font-size:0.75rem;color:var(--muted);">🕳️ Holes (+3) &bull; 🎯 Leans (+2) &bull; 🟫 Boards (+1) &bull; M = Matches played</p>';
+  html += '<p style="text-align:center;margin-top:8px;font-size:0.75rem;color:var(--muted);">🕳️ Holes (+3) &bull; 🎯 Leans (+2) &bull; 🟫 Boards (+1) &bull; PTS = Avg per match &bull; M = Matches played<br>Tap a player to see per-match breakdown</p>';
   return html;
+}
+
+function togglePlayerDetail(rowId) {
+  const row = document.getElementById(rowId);
+  const detail = document.getElementById(rowId + '-detail');
+  if (!row || !detail) return;
+  const isOpen = row.classList.contains('expanded');
+  row.classList.toggle('expanded');
+  detail.style.display = isOpen ? 'none' : 'table-row';
 }
 
 renderStandings();
