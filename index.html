@@ -344,6 +344,76 @@
     margin-top: 20px;
   }
 
+  /* ── Hamburger Menu ── */
+  .hamburger-btn {
+    position: absolute;
+    top: 16px; right: 20px;
+    width: 40px; height: 40px;
+    background: rgba(255,255,255,0.15);
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    z-index: 1010;
+    transition: background 0.2s;
+  }
+  .hamburger-btn:hover { background: rgba(255,255,255,0.25); }
+  .hamburger-btn span {
+    display: block;
+    width: 22px; height: 2px;
+    background: white;
+    border-radius: 2px;
+    transition: all 0.3s;
+  }
+  .hamburger-btn.open span:nth-child(1) { transform: rotate(45deg) translate(5px, 5px); }
+  .hamburger-btn.open span:nth-child(2) { opacity: 0; }
+  .hamburger-btn.open span:nth-child(3) { transform: rotate(-45deg) translate(5px, -5px); }
+  .nav-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 999;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+  }
+  .nav-overlay.open { opacity: 1; pointer-events: auto; }
+  .nav-drawer {
+    position: fixed;
+    top: 0; right: -280px;
+    width: 280px; height: 100%;
+    background: var(--card);
+    z-index: 1000;
+    box-shadow: -4px 0 20px rgba(0,0,0,0.15);
+    transition: right 0.3s;
+    padding: 80px 0 40px;
+    display: flex;
+    flex-direction: column;
+  }
+  .nav-drawer.open { right: 0; }
+  .nav-drawer a {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 28px;
+    text-decoration: none;
+    color: var(--dark);
+    font-weight: 600;
+    font-size: 0.95rem;
+    transition: background 0.15s;
+    border-left: 3px solid transparent;
+  }
+  .nav-drawer a:hover { background: #fef9f0; }
+  .nav-drawer a.active {
+    background: var(--accent);
+    color: white;
+    border-left-color: var(--accent2);
+  }
+  .nav-drawer .nav-icon { font-size: 1.2rem; width: 24px; text-align: center; }
+
   /* ── Responsive ── */
   @media (max-width: 600px) {
     .hero { padding: 40px 16px 36px; }
@@ -364,11 +434,23 @@
 
 <!-- ═══════ HERO ═══════ -->
 <header class="hero">
+  <button class="hamburger-btn" onclick="toggleMenu()">
+    <span></span><span></span><span></span>
+  </button>
   <div class="corn-emoji">🌽🎯</div>
   <h1>PICCOLLAGE CORNHOLE LEAGUE</h1>
   <p class="subtitle">Toss bags. Talk trash. Win glory.</p>
   <div class="season-badge">🏆 Season 1 &mdash; 2026</div>
 </header>
+
+<div class="nav-overlay" onclick="toggleMenu()"></div>
+<nav class="nav-drawer">
+  <a href="index.html" class="active"><span class="nav-icon">🏠</span> Home</a>
+  <a href="roster.html"><span class="nav-icon">📋</span> Roster</a>
+  <a href="livescore.html"><span class="nav-icon">🎯</span> Live Score</a>
+  <a href="history.html"><span class="nav-icon">📜</span> Match History</a>
+  <a href="leaderboard.html"><span class="nav-icon">🏅</span> Leaderboard</a>
+</nav>
 
 <!-- ═══════ NAV ═══════ -->
 <nav>
@@ -378,7 +460,6 @@
     <li><a href="#teams">Teams</a></li>
     <li><a href="#schedule">Schedule</a></li>
     <li><a href="roster.html">Roster</a></li>
-    <li><a href="scores.html">Scores</a></li>
     <li><a href="#rules">Rules</a></li>
     <li><a href="#playoffs">Playoffs</a></li>
   </ul>
@@ -433,7 +514,7 @@
       </tbody>
     </table>
     </div>
-    <p style="text-align:center;margin-top:10px;font-size:0.8rem;"><a href="scores.html" style="color:var(--accent);font-weight:600;text-decoration:none;">View full scoreboard & match history →</a></p>
+    <p style="text-align:center;margin-top:10px;font-size:0.8rem;"><a href="leaderboard.html" style="color:var(--accent);font-weight:600;text-decoration:none;">View full leaderboard →</a></p>
   </div>
 </section>
 
@@ -727,7 +808,7 @@ function buildGameCell(weekNum, gameSlot, teams, results, rosters) {
     const scoreText = `${result.winsA}–${result.winsB}`;
     return `<div class="game-cell">
       <span class="game-label">${label} <small style="color:var(--accent3);font-weight:700;">(${scoreText})</small></span>
-      <a href="scores.html?tab=history&week=${weekNum}" class="game-action result">Result</a>
+      <a href="history.html?week=${weekNum}" class="game-action result">Result</a>
     </div>`;
   }
 
@@ -737,7 +818,7 @@ function buildGameCell(weekNum, gameSlot, teams, results, rosters) {
   if (rosterA && rosterB) {
     return `<div class="game-cell">
       <span class="game-label">${label}</span>
-      <a href="scores.html?tab=live&week=${weekNum}&game=${gameSlot}" class="game-action start-match">Start Match</a>
+      <a href="livescore.html?week=${weekNum}&game=${gameSlot}" class="game-action start-match">Start Match</a>
     </div>`;
   }
 
@@ -755,6 +836,13 @@ db.ref('rosters').on('value', (snap) => {
   _rostersCache = snap.val() || {};
   renderSchedule();
 });
+
+// ── Hamburger Menu ──
+function toggleMenu() {
+  document.querySelector('.hamburger-btn').classList.toggle('open');
+  document.querySelector('.nav-overlay').classList.toggle('open');
+  document.querySelector('.nav-drawer').classList.toggle('open');
+}
 
 // Initial render
 renderStandings([]);
