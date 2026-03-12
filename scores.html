@@ -1405,6 +1405,56 @@ function renderHistory() {
 //  INIT
 // ══════════════════════════════════════════════
 populateWeeks();
+
+// ── URL Parameter Deep-Linking ──
+(function handleUrlParams() {
+  const params = new URLSearchParams(window.location.search);
+  const tab = params.get('tab');     // 'live', 'standings', 'history'
+  const week = params.get('week');   // week number
+  const game = params.get('game');   // 'g1' or 'g2'
+
+  if (!tab) return;
+
+  // Switch to the requested tab
+  const validTabs = ['live', 'standings', 'history'];
+  if (!validTabs.includes(tab)) return;
+  switchTab(tab);
+
+  if (tab === 'live' && week) {
+    // Auto-select week
+    const weekSel = document.getElementById('score-week');
+    weekSel.value = week;
+    onSetupChange(); // populates game dropdown
+
+    if (game) {
+      // Auto-select game after a tick so the dropdown is populated
+      setTimeout(() => {
+        const gameSel = document.getElementById('score-game');
+        gameSel.value = game;
+        onSetupChange(); // shows preview + enables start button
+      }, 50);
+    }
+  }
+
+  if (tab === 'history' && week) {
+    // Scroll to the specific week's history after render
+    setTimeout(() => {
+      const weekHeaders = document.querySelectorAll('.history-week-header');
+      for (const hdr of weekHeaders) {
+        if (hdr.textContent.includes(`Week ${week}`)) {
+          hdr.closest('.history-week').scrollIntoView({ behavior: 'smooth', block: 'start' });
+          // Add a brief highlight
+          const card = hdr.closest('.history-week');
+          card.style.outline = '3px solid var(--accent2)';
+          card.style.outlineOffset = '4px';
+          card.style.borderRadius = '12px';
+          setTimeout(() => { card.style.outline = 'none'; }, 3000);
+          break;
+        }
+      }
+    }, 200);
+  }
+})();
 </script>
 
 </body>
