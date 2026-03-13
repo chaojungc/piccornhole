@@ -1090,11 +1090,30 @@ function renderAnnouncements() {
       html += '</div>';
     });
 
-    // Show bye info from the first game's week
-    const weekData = SCHEDULE.find(s => s.wk === nextBatch[0].wk);
-    if (weekData) {
-      const byeTeam = TEAM_INFO[weekData.bye];
-      html += '<div class="match-bye">' + byeTeam.emoji + ' ' + weekData.bye + ' has a bye</div>';
+    // Show bye info for each unique week represented (skip rescheduled-in games)
+    const seenWeeks = new Set();
+    nextBatch.forEach(g => {
+      if (seenWeeks.has(g.wk)) return;
+      seenWeeks.add(g.wk);
+      // Only show bye if this game is "native" to its week (not rescheduled from another week)
+      // i.e. the effective date matches the batch date — or it's the original date
+      const isNative = !isOverridden(g.wk, g.slot);
+      if (!isNative) return;
+      const weekData = SCHEDULE.find(s => s.wk === g.wk);
+      if (weekData) {
+        const byeTeam = TEAM_INFO[weekData.bye];
+        html += '<div class="match-bye">' + byeTeam.emoji + ' ' + weekData.bye + ' has a bye</div>';
+      }
+    });
+    // If no native games found (all are rescheduled-in), show bye from the week that owns that date
+    if (seenWeeks.size === 0 || ![...seenWeeks].some(wk => nextBatch.some(g => g.wk === wk && !isOverridden(g.wk, g.slot)))) {
+      // Find the week whose original date matches the soonest date
+      const soonestDateStr = nextBatch[0].effectiveDate;
+      const nativeWeek = SCHEDULE.find(s => s.date === soonestDateStr);
+      if (nativeWeek && !seenWeeks.has(nativeWeek.wk)) {
+        const byeTeam = TEAM_INFO[nativeWeek.bye];
+        html += '<div class="match-bye">' + byeTeam.emoji + ' ' + nativeWeek.bye + ' has a bye</div>';
+      }
     }
 
     upcomingBody.innerHTML = html;
