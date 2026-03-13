@@ -117,6 +117,160 @@
   }
   .section-title span { color: var(--accent2); }
 
+  /* ── Announcements ── */
+  .announcement-cards {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+  .announce-card {
+    background: var(--card);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    transition: transform 0.2s;
+  }
+  .announce-card:hover { transform: translateY(-3px); }
+  .announce-card-header {
+    padding: 16px 20px;
+    font-family: 'Bangers', cursive;
+    font-size: 1.15rem;
+    letter-spacing: 1px;
+    color: white;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .announce-card.upcoming .announce-card-header {
+    background: linear-gradient(135deg, #2c3e50, #34495e);
+  }
+  .announce-card.last-result .announce-card-header {
+    background: linear-gradient(135deg, #27ae60, #2ecc71);
+  }
+  .announce-card-body { padding: 20px; }
+  .upcoming-match {
+    padding: 14px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .upcoming-match:last-child { border-bottom: none; }
+  .upcoming-match-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+  .match-teams {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    font-size: 0.95rem;
+  }
+  .match-vs {
+    font-size: 0.75rem;
+    color: var(--muted);
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+  .match-date-badge {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--accent);
+    background: rgba(192,57,43,0.08);
+    padding: 3px 12px;
+    border-radius: 20px;
+  }
+  .upcoming-match-bottom {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .match-week-label {
+    font-size: 0.78rem;
+    color: var(--muted);
+  }
+  .match-bye {
+    font-size: 0.78rem;
+    color: var(--muted);
+    text-align: center;
+    padding-top: 8px;
+    font-style: italic;
+  }
+  .roster-action {
+    display: inline-block;
+    padding: 5px 14px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-decoration: none;
+    text-align: center;
+    white-space: nowrap;
+    transition: all 0.2s;
+  }
+  .roster-action.submit { background: var(--accent2); color: white; }
+  .roster-action.submit:hover { background: #d35400; }
+  .roster-action.view {
+    background: rgba(39,174,96,0.12);
+    color: var(--accent3);
+    border: 1px solid rgba(39,174,96,0.25);
+  }
+  .roster-action.view:hover { background: rgba(39,174,96,0.2); }
+  .result-matchup { text-align: center; padding: 8px 0 16px; }
+  .result-teams {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    margin-bottom: 12px;
+  }
+  .result-team { text-align: center; flex: 1; }
+  .result-team-name { font-weight: 700; font-size: 1.05rem; }
+  .result-team-name.winner { color: var(--accent3); }
+  .result-score {
+    font-family: 'Bangers', cursive;
+    font-size: 2.4rem;
+    letter-spacing: 4px;
+    color: var(--dark);
+    line-height: 1;
+    margin: 8px 0;
+  }
+  .result-score .winner-score { color: var(--accent3); }
+  .result-vs-divider { font-size: 0.85rem; font-weight: 700; color: var(--muted); }
+  .result-badge {
+    display: inline-block;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    background: rgba(39,174,96,0.1);
+    color: var(--accent3);
+  }
+  .result-week-info { font-size: 0.82rem; color: var(--muted); margin-top: 8px; }
+  .result-link {
+    display: inline-block;
+    margin-top: 14px;
+    padding: 8px 20px;
+    background: var(--accent);
+    color: white;
+    text-decoration: none;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    transition: background 0.2s;
+  }
+  .result-link:hover { background: #a93226; }
+  .announce-no-data {
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.9rem;
+    padding: 20px 0;
+  }
+  @media (max-width: 700px) {
+    .announcement-cards { grid-template-columns: 1fr; }
+  }
+
   /* ── Timeline ── */
   .timeline {
     display: flex;
@@ -463,6 +617,27 @@
     <li><a href="#playoffs">Playoffs</a></li>
   </ul>
 </nav>
+
+<!-- ═══════ ANNOUNCEMENTS ═══════ -->
+<section id="announcements">
+  <div class="container">
+    <h2 class="section-title">📢 <span>Announcements</span></h2>
+    <div class="announcement-cards">
+      <div class="announce-card upcoming">
+        <div class="announce-card-header">🗓️ Upcoming Matches</div>
+        <div class="announce-card-body" id="upcoming-body">
+          <div class="announce-no-data">Loading...</div>
+        </div>
+      </div>
+      <div class="announce-card last-result">
+        <div class="announce-card-header">🏆 Last Match Result</div>
+        <div class="announce-card-body" id="last-result-body">
+          <div class="announce-no-data">Loading...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
 
 <!-- ═══════ TIMELINE ═══════ -->
 <section id="timeline">
@@ -824,16 +999,124 @@ function buildGameCell(weekNum, gameSlot, teams, results, rosters) {
   return label;
 }
 
+// ── Announcements ──
+function renderAnnouncements() {
+  const results = _resultsCache;
+  const rosters = _rostersCache;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const year = today.getFullYear();
+
+  // ── Upcoming Matches: find the next week with no results yet ──
+  const upcomingBody = document.getElementById('upcoming-body');
+  let nextWeek = null;
+  for (let i = 0; i < SCHEDULE.length; i++) {
+    const s = SCHEDULE[i];
+    const hasResultG1 = results.some(r => r.week === s.wk && r.gameSlot === 'g1');
+    const hasResultG2 = results.some(r => r.week === s.wk && r.gameSlot === 'g2');
+    if (!hasResultG1 || !hasResultG2) {
+      nextWeek = s;
+      break;
+    }
+  }
+
+  if (nextWeek) {
+    const games = [
+      { slot: 'g1', teams: nextWeek.g1 },
+      { slot: 'g2', teams: nextWeek.g2 }
+    ];
+    let html = '';
+    games.forEach(g => {
+      const tA = TEAM_INFO[g.teams[0]];
+      const tB = TEAM_INFO[g.teams[1]];
+      const rosterA = rosters[nextWeek.wk + '_' + g.teams[0]];
+      const rosterB = rosters[nextWeek.wk + '_' + g.teams[1]];
+      const bothIn = rosterA && rosterB;
+
+      const rosterBtn = bothIn
+        ? '<a href="roster.html" class="roster-action view">✅ View Roster</a>'
+        : '<a href="roster.html" class="roster-action submit">Submit Roster</a>';
+
+      html += '<div class="upcoming-match">';
+      html += '<div class="upcoming-match-top">';
+      html += '<div class="match-teams">';
+      html += '<span>' + tA.emoji + ' ' + g.teams[0] + '</span>';
+      html += '<span class="match-vs">vs</span>';
+      html += '<span>' + tB.emoji + ' ' + g.teams[1] + '</span>';
+      html += '</div>';
+      html += '<div class="match-date-badge">' + nextWeek.date + '</div>';
+      html += '</div>';
+      html += '<div class="upcoming-match-bottom">';
+      html += '<div class="match-week-label">Week ' + nextWeek.wk + '</div>';
+      html += rosterBtn;
+      html += '</div>';
+      html += '</div>';
+    });
+    const byeTeam = TEAM_INFO[nextWeek.bye];
+    html += '<div class="match-bye">' + byeTeam.emoji + ' ' + nextWeek.bye + ' has a bye</div>';
+    upcomingBody.innerHTML = html;
+  } else {
+    upcomingBody.innerHTML = '<div class="announce-no-data">No upcoming matches — season complete! 🎉</div>';
+  }
+
+  // ── Last Match Result: find the most recent result ──
+  const lastResultBody = document.getElementById('last-result-body');
+  if (results.length === 0) {
+    lastResultBody.innerHTML = '<div class="announce-no-data">No matches played yet</div>';
+    return;
+  }
+
+  // Get latest result by week (highest week number), then by gameSlot
+  const sorted = [...results].sort((a, b) => {
+    if (b.week !== a.week) return b.week - a.week;
+    return (b.gameSlot || '').localeCompare(a.gameSlot || '');
+  });
+  const last = sorted[0];
+  const tA = TEAM_INFO[last.teamA];
+  const tB = TEAM_INFO[last.teamB];
+  const weekData = SCHEDULE.find(s => s.wk === last.week);
+  const dateStr = weekData ? weekData.date : 'Week ' + last.week;
+
+  let winnerName = '';
+  let scoreHtml = '';
+  if (last.winsA >= 2) {
+    winnerName = last.teamA;
+    scoreHtml = '<span class="winner-score">' + last.winsA + '</span> – ' + last.winsB;
+  } else if (last.winsB >= 2) {
+    winnerName = last.teamB;
+    scoreHtml = last.winsA + ' – <span class="winner-score">' + last.winsB + '</span>';
+  } else {
+    scoreHtml = last.winsA + ' – ' + last.winsB;
+  }
+
+  let rHtml = '<div class="result-matchup">';
+  rHtml += '<div class="result-week-info">Week ' + last.week + ' — ' + dateStr + '</div>';
+  rHtml += '<div class="result-teams">';
+  rHtml += '<div class="result-team"><div class="result-team-name' + (winnerName === last.teamA ? ' winner' : '') + '">' + tA.emoji + ' ' + last.teamA + '</div></div>';
+  rHtml += '<div class="result-vs-divider">VS</div>';
+  rHtml += '<div class="result-team"><div class="result-team-name' + (winnerName === last.teamB ? ' winner' : '') + '">' + tB.emoji + ' ' + last.teamB + '</div></div>';
+  rHtml += '</div>';
+  rHtml += '<div class="result-score">' + scoreHtml + '</div>';
+  if (winnerName) {
+    rHtml += '<div class="result-badge">🎉 Team ' + winnerName + ' wins!</div>';
+  }
+  rHtml += '<br><a href="history.html?week=' + last.week + '" class="result-link">View Full Details →</a>';
+  rHtml += '</div>';
+  lastResultBody.innerHTML = rHtml;
+}
+
 // ── Firebase Listeners ──
 db.ref('results').on('value', (snap) => {
   _resultsCache = snap.val() || [];
   renderStandings(_resultsCache);
   renderSchedule();
+  renderAnnouncements();
 });
 
 db.ref('rosters').on('value', (snap) => {
   _rostersCache = snap.val() || {};
   renderSchedule();
+  renderAnnouncements();
 });
 
 // ── Hamburger Menu ──
@@ -846,6 +1129,7 @@ function toggleMenu() {
 // Initial render
 renderStandings([]);
 renderSchedule();
+renderAnnouncements();
 </script>
 </body>
 </html>
