@@ -215,6 +215,32 @@
     border: 1px solid rgba(39,174,96,0.25);
   }
   .roster-action.view:hover { background: rgba(39,174,96,0.2); }
+  /* Player names in upcoming matches */
+  .match-players {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin: 6px 0 8px;
+    font-size: 0.78rem;
+    color: var(--muted);
+    line-height: 1.4;
+  }
+  .match-players .team-players { flex: 1; }
+  .match-players .team-players .player-name { display: block; }
+  .match-players .players-vs {
+    color: var(--border);
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding-top: 2px;
+  }
+  .match-players .team-players:last-child { text-align: right; }
+  /* Player names in last match result */
+  .result-team-players {
+    font-size: 0.75rem;
+    color: var(--muted);
+    margin-top: 4px;
+    line-height: 1.4;
+  }
   .result-matchup { text-align: center; padding: 8px 0 16px; }
   .result-teams {
     display: flex;
@@ -1067,8 +1093,8 @@ function renderAnnouncements() {
       const bothIn = rosterA && rosterB;
 
       const rosterBtn = bothIn
-        ? '<a href="roster.html" class="roster-action view">✅ View Roster</a>'
-        : '<a href="roster.html" class="roster-action submit">Submit Roster</a>';
+        ? '<a href="roster.html?tab=view&week=' + g.wk + '" class="roster-action view">✅ View Roster</a>'
+        : '<a href="roster.html?tab=manage&week=' + g.wk + '" class="roster-action submit">Submit Roster</a>';
 
       const dateLabel = g.effectiveDate !== g.origDate
         ? g.effectiveDate + ' <small style="color:var(--muted);text-decoration:line-through;">' + g.origDate + '</small>'
@@ -1083,6 +1109,30 @@ function renderAnnouncements() {
       html += '</div>';
       html += '<div class="match-date-badge">' + dateLabel + '</div>';
       html += '</div>';
+
+      // Player names row (exclude captain — already shown as team name)
+      const playersA = rosterA ? rosterA.players.filter(p => p !== tA.captain) : null;
+      const playersB = rosterB ? rosterB.players.filter(p => p !== tB.captain) : null;
+      if (playersA || playersB) {
+        html += '<div class="match-players">';
+        html += '<div class="team-players">';
+        if (playersA && playersA.length) {
+          playersA.forEach(p => { html += '<span class="player-name">' + p + '</span>'; });
+        } else if (!rosterA) {
+          html += '<span class="player-name" style="color:var(--accent2);font-style:italic">Roster pending…</span>';
+        }
+        html += '</div>';
+        html += '<div class="players-vs">vs</div>';
+        html += '<div class="team-players">';
+        if (playersB && playersB.length) {
+          playersB.forEach(p => { html += '<span class="player-name">' + p + '</span>'; });
+        } else if (!rosterB) {
+          html += '<span class="player-name" style="color:var(--accent2);font-style:italic">Roster pending…</span>';
+        }
+        html += '</div>';
+        html += '</div>';
+      }
+
       html += '<div class="upcoming-match-bottom">';
       html += '<div class="match-week-label">Week ' + g.wk + '</div>';
       html += rosterBtn;
@@ -1154,9 +1204,17 @@ function renderAnnouncements() {
   let rHtml = '<div class="result-matchup">';
   rHtml += '<div class="result-week-info">Week ' + last.week + ' — ' + dateStr + '</div>';
   rHtml += '<div class="result-teams">';
-  rHtml += '<div class="result-team"><div class="result-team-name' + (winnerName === last.teamA ? ' winner' : '') + '">' + tA.emoji + ' ' + last.teamA + '</div></div>';
+  const rRosterA = rosters[last.week + '_' + last.teamA];
+  const rRosterB = rosters[last.week + '_' + last.teamB];
+  const rPlayersA = rRosterA ? rRosterA.players.filter(p => p !== tA.captain).join(', ') : '';
+  const rPlayersB = rRosterB ? rRosterB.players.filter(p => p !== tB.captain).join(', ') : '';
+  rHtml += '<div class="result-team"><div class="result-team-name' + (winnerName === last.teamA ? ' winner' : '') + '">' + tA.emoji + ' ' + last.teamA + '</div>';
+  if (rPlayersA) rHtml += '<div class="result-team-players">' + rPlayersA + '</div>';
+  rHtml += '</div>';
   rHtml += '<div class="result-vs-divider">VS</div>';
-  rHtml += '<div class="result-team"><div class="result-team-name' + (winnerName === last.teamB ? ' winner' : '') + '">' + tB.emoji + ' ' + last.teamB + '</div></div>';
+  rHtml += '<div class="result-team"><div class="result-team-name' + (winnerName === last.teamB ? ' winner' : '') + '">' + tB.emoji + ' ' + last.teamB + '</div>';
+  if (rPlayersB) rHtml += '<div class="result-team-players">' + rPlayersB + '</div>';
+  rHtml += '</div>';
   rHtml += '</div>';
   rHtml += '<div class="result-score">' + scoreHtml + '</div>';
   if (winnerName) {
