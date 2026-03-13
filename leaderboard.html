@@ -289,11 +289,11 @@ function toggleMenu() {
 
 // ── Data ──
 const TEAMS = {
-  Althea:  { emoji: "🔴", captain: "Althea Gere", color: "#c0392b", players: ["Alex", "Yu-tang Cheng", "Jocelin", "Aaron Chiu", "Palm", "Angela"] },
-  Justin:  { emoji: "🔵", captain: "Justin Ruan", color: "#2980b9", players: ["Ann Chiang", "Jeff", "Jose Calpito", "CJ", "Rick Lee", "Oscar Shen"] },
-  Nana:    { emoji: "🟣", captain: "Nana Fu", color: "#8e44ad", players: ["Wen", "Kelvin Chow", "Messi Yang", "Angela Wu", "Kobe", "Amelia Hu"] },
-  Liyu:    { emoji: "🟢", captain: "Liyu", color: "#27ae60", players: ["Yanbin", "Tim Chen", "Ashley Hsu", "Brad Lee", "Genie Hou", "Lawrence"] },
-  Landice: { emoji: "🟠", captain: "Landice Fu", color: "#e67e22", players: ["Tinya", "Steve", "Ting-Kai", "Shannon", "Lee Heng", "Yuji"] }
+  Althea:  { emoji: "🔴", name: "Team Althea",  captain: "Althea Gere", color: "#c0392b", players: ["Alex", "Yu-tang Cheng", "Jocelin", "Aaron Chiu", "Palm", "Angela"] },
+  Justin:  { emoji: "🔵", name: "Team Justin",  captain: "Justin Ruan", color: "#2980b9", players: ["Ann Chiang", "Jeff", "Jose Calpito", "CJ", "Rick Lee", "Oscar Shen"] },
+  Nana:    { emoji: "🟣", name: "Team Nana",    captain: "Nana Fu", color: "#8e44ad", players: ["Wen", "Kelvin Chow", "Messi Yang", "Angela Wu", "Kobe", "Amelia Hu"] },
+  Liyu:    { emoji: "🟢", name: "Team Liyu",    captain: "Liyu", color: "#27ae60", players: ["Yanbin", "Tim Chen", "Ashley Hsu", "Brad Lee", "Genie Hou", "Lawrence"] },
+  Landice: { emoji: "🟠", name: "Team Landice", captain: "Landice Fu", color: "#e67e22", players: ["Tinya", "Steve", "Ting-Kai", "Shannon", "Lee Heng", "Yuji"] }
 };
 
 // ── Firebase ──
@@ -452,7 +452,7 @@ function renderScoringLeaders() {
     html += `<tr class="player-row" id="${rowId}" onclick="togglePlayerDetail('${rowId}')">
       <td>${medal}</td>
       <td><strong>${name}</strong><span class="expand-arrow">&#9654;</span></td>
-      <td>${emoji} ${s.team}</td>
+      <td>${emoji} ${TEAMS[s.team] ? TEAMS[s.team].name : s.team}</td>
       <td class="center">${s.holes}</td>
       <td class="center">${s.leans}</td>
       <td class="center">${s.boards}</td>
@@ -465,7 +465,7 @@ function renderScoringLeaders() {
     s.matchDetails.sort((a, b) => a.week - b.week).forEach(m => {
       const oppEmoji = TEAMS[m.opponent] ? TEAMS[m.opponent].emoji : '';
       html += `<div class="match-detail">
-        <span class="match-label">Wk ${m.week} vs ${oppEmoji} ${m.opponent}</span>
+        <span class="match-label">Week ${m.week} vs ${oppEmoji} ${TEAMS[m.opponent] ? TEAMS[m.opponent].name : m.opponent}</span>
         <span class="match-stats">
           <span>🕳️${m.holes}</span>
           <span>🎯${m.leans}</span>

@@ -649,11 +649,11 @@
 <script>
 // ── DATA ──
 const TEAMS = {
-  Althea:  { emoji: "🔴", captain: "Althea Gere", players: ["Alex", "Yu-tang Cheng", "Jocelin", "Aaron Chiu", "Palm", "Angela"] },
-  Justin:  { emoji: "🔵", captain: "Justin Ruan", players: ["Ann Chiang", "Jeff", "Jose Calpito", "CJ", "Rick Lee", "Oscar Shen"] },
-  Nana:    { emoji: "🟣", captain: "Nana Fu", players: ["Wen", "Kelvin Chow", "Messi Yang", "Angela Wu", "Kobe", "Amelia Hu"] },
-  Liyu:    { emoji: "🟢", captain: "Liyu", players: ["Yanbin", "Tim Chen", "Ashley Hsu", "Brad Lee", "Genie Hou", "Lawrence"] },
-  Landice: { emoji: "🟠", captain: "Landice Fu", players: ["Tinya", "Steve", "Ting-Kai", "Shannon", "Lee Heng", "Yuji"] }
+  Althea:  { emoji: "🔴", name: "Team Althea",  captain: "Althea Gere", players: ["Alex", "Yu-tang Cheng", "Jocelin", "Aaron Chiu", "Palm", "Angela"] },
+  Justin:  { emoji: "🔵", name: "Team Justin",  captain: "Justin Ruan", players: ["Ann Chiang", "Jeff", "Jose Calpito", "CJ", "Rick Lee", "Oscar Shen"] },
+  Nana:    { emoji: "🟣", name: "Team Nana",    captain: "Nana Fu", players: ["Wen", "Kelvin Chow", "Messi Yang", "Angela Wu", "Kobe", "Amelia Hu"] },
+  Liyu:    { emoji: "🟢", name: "Team Liyu",    captain: "Liyu", players: ["Yanbin", "Tim Chen", "Ashley Hsu", "Brad Lee", "Genie Hou", "Lawrence"] },
+  Landice: { emoji: "🟠", name: "Team Landice", captain: "Landice Fu", players: ["Tinya", "Steve", "Ting-Kai", "Shannon", "Lee Heng", "Yuji"] }
 };
 
 const SCHEDULE = [
@@ -784,12 +784,12 @@ function renderBoard() {
         : '<span class="waiting-badge">Waiting for opponent</span>';
 
       html += `<div class="game-card ${statusClass}">`;
-      html += `<div class="game-title">Game ${gi + 1}: ${TEAMS[teamA].emoji} ${teamA} vs ${TEAMS[teamB].emoji} ${teamB} ${badge}</div>`;
+      html += `<div class="game-title">Game ${gi + 1}: ${TEAMS[teamA].emoji} ${TEAMS[teamA].name} vs ${TEAMS[teamB].emoji} ${TEAMS[teamB].name} ${badge}</div>`;
       html += `<div class="game-rosters">`;
 
       // Team A side
       html += `<div class="roster-side">`;
-      html += `<div class="team-label">${TEAMS[teamA].emoji} ${teamA}</div>`;
+      html += `<div class="team-label">${TEAMS[teamA].emoji} ${TEAMS[teamA].name}</div>`;
       if (bothIn) {
         html += `<div class="players-list">${rosterA.players.join('<br>')}</div>`;
       } else if (rosterA) {
@@ -803,7 +803,7 @@ function renderBoard() {
 
       // Team B side
       html += `<div class="roster-side" style="text-align:right;">`;
-      html += `<div class="team-label">${TEAMS[teamB].emoji} ${teamB}</div>`;
+      html += `<div class="team-label">${TEAMS[teamB].emoji} ${TEAMS[teamB].name}</div>`;
       if (bothIn) {
         html += `<div class="players-list">${rosterB.players.join('<br>')}</div>`;
       } else if (rosterB) {

@@ -888,11 +888,11 @@ const db = firebase.database();
 
 // ── Data ──
 const TEAM_INFO = {
-  Althea:  { emoji: "🔴", captain: "Althea Gere" },
-  Justin:  { emoji: "🔵", captain: "Justin Ruan" },
-  Nana:    { emoji: "🟣", captain: "Nana Fu" },
-  Liyu:    { emoji: "🟢", captain: "Liyu" },
-  Landice: { emoji: "🟠", captain: "Landice Fu" }
+  Althea:  { emoji: "🔴", name: "Team Althea",  captain: "Althea Gere" },
+  Justin:  { emoji: "🔵", name: "Team Justin",  captain: "Justin Ruan" },
+  Nana:    { emoji: "🟣", name: "Team Nana",    captain: "Nana Fu" },
+  Liyu:    { emoji: "🟢", name: "Team Liyu",    captain: "Liyu" },
+  Landice: { emoji: "🟠", name: "Team Landice", captain: "Landice Fu" }
 };
 
 const SCHEDULE = [
@@ -974,7 +974,7 @@ function renderStandings(results) {
     const t = TEAM_INFO[name];
     return `<tr>
       <td><span class="rank">${i+1}</span></td>
-      <td class="team-name">${t.emoji} Team ${name}</td>
+      <td class="team-name">${t.emoji} ${t.name}</td>
       <td>${t.captain} <span class="captain-badge">CPT</span></td>
       <td>${s.wins}</td>
       <td>${s.losses}</td>
@@ -1011,13 +1011,13 @@ function renderSchedule() {
       <td>${s.date}</td>
       <td>${g1Html}</td>
       <td>${g2Html}</td>
-      <td><span class="bye-badge">${s.bye}</span></td>
+      <td><span class="bye-badge">${TEAM_INFO[s.bye].name}</span></td>
     </tr>`;
   }).join('');
 }
 
 function buildGameCell(weekNum, gameSlot, teams, results, rosters, origDate) {
-  const label = `${teams[0]} vs ${teams[1]}`;
+  const label = `${TEAM_INFO[teams[0]].name} vs ${TEAM_INFO[teams[1]].name}`;
   const overrideDate = isOverridden(weekNum, gameSlot) ? getGameDate(weekNum, gameSlot, origDate) : null;
   const dateNote = overrideDate ? ` <small style="color:var(--accent2);">📅 Played ${overrideDate}</small>` : '';
 
@@ -1103,16 +1103,16 @@ function renderAnnouncements() {
       html += '<div class="upcoming-match">';
       html += '<div class="upcoming-match-top">';
       html += '<div class="match-teams">';
-      html += '<span>' + tA.emoji + ' ' + g.teams[0] + '</span>';
+      html += '<span>' + tA.emoji + ' ' + tA.name + '</span>';
       html += '<span class="match-vs">vs</span>';
-      html += '<span>' + tB.emoji + ' ' + g.teams[1] + '</span>';
+      html += '<span>' + tB.emoji + ' ' + tB.name + '</span>';
       html += '</div>';
       html += '<div class="match-date-badge">' + dateLabel + '</div>';
       html += '</div>';
 
-      // Player names row (exclude captain — already shown as team name)
-      const playersA = rosterA ? rosterA.players.filter(p => p !== tA.captain) : null;
-      const playersB = rosterB ? rosterB.players.filter(p => p !== tB.captain) : null;
+      // Player names row (all rostered players including captain)
+      const playersA = rosterA ? rosterA.players : null;
+      const playersB = rosterB ? rosterB.players : null;
       if (playersA || playersB) {
         html += '<div class="match-players">';
         html += '<div class="team-players">';
@@ -1152,7 +1152,7 @@ function renderAnnouncements() {
       const weekData = SCHEDULE.find(s => s.wk === g.wk);
       if (weekData) {
         const byeTeam = TEAM_INFO[weekData.bye];
-        html += '<div class="match-bye">' + byeTeam.emoji + ' ' + weekData.bye + ' has a bye</div>';
+        html += '<div class="match-bye">' + byeTeam.emoji + ' ' + byeTeam.name + ' has a bye</div>';
       }
     });
     // If no native games found (all are rescheduled-in), show bye from the week that owns that date
@@ -1162,7 +1162,7 @@ function renderAnnouncements() {
       const nativeWeek = SCHEDULE.find(s => s.date === soonestDateStr);
       if (nativeWeek && !seenWeeks.has(nativeWeek.wk)) {
         const byeTeam = TEAM_INFO[nativeWeek.bye];
-        html += '<div class="match-bye">' + byeTeam.emoji + ' ' + nativeWeek.bye + ' has a bye</div>';
+        html += '<div class="match-bye">' + byeTeam.emoji + ' ' + byeTeam.name + ' has a bye</div>';
       }
     }
 
@@ -1206,19 +1206,20 @@ function renderAnnouncements() {
   rHtml += '<div class="result-teams">';
   const rRosterA = rosters[last.week + '_' + last.teamA];
   const rRosterB = rosters[last.week + '_' + last.teamB];
-  const rPlayersA = rRosterA ? rRosterA.players.filter(p => p !== tA.captain).join(', ') : '';
-  const rPlayersB = rRosterB ? rRosterB.players.filter(p => p !== tB.captain).join(', ') : '';
-  rHtml += '<div class="result-team"><div class="result-team-name' + (winnerName === last.teamA ? ' winner' : '') + '">' + tA.emoji + ' ' + last.teamA + '</div>';
+  const rPlayersA = rRosterA ? rRosterA.players.join(', ') : '';
+  const rPlayersB = rRosterB ? rRosterB.players.join(', ') : '';
+  rHtml += '<div class="result-team"><div class="result-team-name' + (winnerName === last.teamA ? ' winner' : '') + '">' + tA.emoji + ' ' + tA.name + '</div>';
   if (rPlayersA) rHtml += '<div class="result-team-players">' + rPlayersA + '</div>';
   rHtml += '</div>';
   rHtml += '<div class="result-vs-divider">VS</div>';
-  rHtml += '<div class="result-team"><div class="result-team-name' + (winnerName === last.teamB ? ' winner' : '') + '">' + tB.emoji + ' ' + last.teamB + '</div>';
+  rHtml += '<div class="result-team"><div class="result-team-name' + (winnerName === last.teamB ? ' winner' : '') + '">' + tB.emoji + ' ' + tB.name + '</div>';
   if (rPlayersB) rHtml += '<div class="result-team-players">' + rPlayersB + '</div>';
   rHtml += '</div>';
   rHtml += '</div>';
   rHtml += '<div class="result-score">' + scoreHtml + '</div>';
   if (winnerName) {
-    rHtml += '<div class="result-badge">🎉 Team ' + winnerName + ' wins!</div>';
+    const winnerInfo = TEAM_INFO[winnerName];
+    rHtml += '<div class="result-badge">🎉 ' + winnerInfo.name + ' wins!</div>';
   }
   rHtml += '<br><a href="history.html?week=' + last.week + '" class="result-link">View Full Details →</a>';
   rHtml += '</div>';

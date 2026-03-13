@@ -585,11 +585,11 @@ function toggleMenu() {
 //  DATA
 // ══════════════════════════════════════════════
 const TEAMS = {
-  Althea:  { emoji: "🔴", captain: "Althea Gere", color: "#c0392b", players: ["Alex", "Yu-tang Cheng", "Jocelin", "Aaron Chiu", "Palm", "Angela"] },
-  Justin:  { emoji: "🔵", captain: "Justin Ruan", color: "#2980b9", players: ["Ann Chiang", "Jeff", "Jose Calpito", "CJ", "Rick Lee", "Oscar Shen"] },
-  Nana:    { emoji: "🟣", captain: "Nana Fu", color: "#8e44ad", players: ["Wen", "Kelvin Chow", "Messi Yang", "Angela Wu", "Kobe", "Amelia Hu"] },
-  Liyu:    { emoji: "🟢", captain: "Liyu", color: "#27ae60", players: ["Yanbin", "Tim Chen", "Ashley Hsu", "Brad Lee", "Genie Hou", "Lawrence"] },
-  Landice: { emoji: "🟠", captain: "Landice Fu", color: "#e67e22", players: ["Tinya", "Steve", "Ting-Kai", "Shannon", "Lee Heng", "Yuji"] }
+  Althea:  { emoji: "🔴", name: "Team Althea",  captain: "Althea Gere", color: "#c0392b", players: ["Alex", "Yu-tang Cheng", "Jocelin", "Aaron Chiu", "Palm", "Angela"] },
+  Justin:  { emoji: "🔵", name: "Team Justin",  captain: "Justin Ruan", color: "#2980b9", players: ["Ann Chiang", "Jeff", "Jose Calpito", "CJ", "Rick Lee", "Oscar Shen"] },
+  Nana:    { emoji: "🟣", name: "Team Nana",    captain: "Nana Fu", color: "#8e44ad", players: ["Wen", "Kelvin Chow", "Messi Yang", "Angela Wu", "Kobe", "Amelia Hu"] },
+  Liyu:    { emoji: "🟢", name: "Team Liyu",    captain: "Liyu", color: "#27ae60", players: ["Yanbin", "Tim Chen", "Ashley Hsu", "Brad Lee", "Genie Hou", "Lawrence"] },
+  Landice: { emoji: "🟠", name: "Team Landice", captain: "Landice Fu", color: "#e67e22", players: ["Tinya", "Steve", "Ting-Kai", "Shannon", "Lee Heng", "Yuji"] }
 };
 
 const SCHEDULE = [
@@ -685,11 +685,11 @@ function onSetupChange() {
     gameSel.innerHTML = '<option value="">-- Select game --</option>';
     const g1opt = document.createElement('option');
     g1opt.value = 'g1';
-    g1opt.textContent = `Game 1: ${TEAMS[wk.g1[0]].emoji} ${wk.g1[0]} vs ${TEAMS[wk.g1[1]].emoji} ${wk.g1[1]}`;
+    g1opt.textContent = `Game 1: ${TEAMS[wk.g1[0]].emoji} ${TEAMS[wk.g1[0]].name} vs ${TEAMS[wk.g1[1]].emoji} ${TEAMS[wk.g1[1]].name}`;
     gameSel.appendChild(g1opt);
     const g2opt = document.createElement('option');
     g2opt.value = 'g2';
-    g2opt.textContent = `Game 2: ${TEAMS[wk.g2[0]].emoji} ${wk.g2[0]} vs ${TEAMS[wk.g2[1]].emoji} ${wk.g2[1]}`;
+    g2opt.textContent = `Game 2: ${TEAMS[wk.g2[0]].emoji} ${TEAMS[wk.g2[0]].name} vs ${TEAMS[wk.g2[1]].emoji} ${TEAMS[wk.g2[1]].name}`;
     gameSel.appendChild(g2opt);
   }
 
@@ -718,9 +718,9 @@ function updatePreview() {
   const results = loadResults();
   const existing = results.find(r => r.week === parseInt(wkVal) && r.gameSlot === gameVal);
   if (existing) {
-    preview.innerHTML = `<div class="matchup-preview" style="border-color:var(--accent3);">✅ This match already has a result: <strong>${TEAMS[existing.teamA].emoji} ${existing.teamA} ${existing.winsA}–${existing.winsB} ${TEAMS[existing.teamB].emoji} ${existing.teamB}</strong><br><small style="color:var(--muted);">Starting a new match will overwrite the previous result.</small></div>`;
+    preview.innerHTML = `<div class="matchup-preview" style="border-color:var(--accent3);">✅ This match already has a result: <strong>${TEAMS[existing.teamA].emoji} ${TEAMS[existing.teamA].name} ${existing.winsA}–${existing.winsB} ${TEAMS[existing.teamB].emoji} ${TEAMS[existing.teamB].name}</strong><br><small style="color:var(--muted);">Starting a new match will overwrite the previous result.</small></div>`;
   } else {
-    preview.innerHTML = `<div class="matchup-preview"><strong>${TEAMS[tA].emoji} ${tA}</strong> vs <strong>${TEAMS[tB].emoji} ${tB}</strong><br><small style="color:var(--muted);">Best of 3 &bull; First to 21 per game</small></div>`;
+    preview.innerHTML = `<div class="matchup-preview"><strong>${TEAMS[tA].emoji} ${TEAMS[tA].name}</strong> vs <strong>${TEAMS[tB].emoji} ${TEAMS[tB].name}</strong><br><small style="color:var(--muted);">Best of 3 &bull; First to 21 per game</small></div>`;
   }
   btn.disabled = false;
 }
@@ -831,8 +831,8 @@ function renderPlayerCards() {
   if (!match) return;
   const tA = TEAMS[match.teamA], tB = TEAMS[match.teamB];
 
-  document.getElementById('section-label-a').innerHTML = `${tA.emoji} ${match.teamA}`;
-  document.getElementById('section-label-b').innerHTML = `${tB.emoji} ${match.teamB}`;
+  document.getElementById('section-label-a').innerHTML = `${tA.emoji} ${tA.name}`;
+  document.getElementById('section-label-b').innerHTML = `${tB.emoji} ${tB.name}`;
 
   document.getElementById('player-cards-a').innerHTML = match.playersA.map(p => buildPlayerCard(p, 'a', tA.color)).join('');
   document.getElementById('player-cards-b').innerHTML = match.playersB.map(p => buildPlayerCard(p, 'b', tB.color)).join('');
@@ -903,8 +903,8 @@ function renderGameWinnerBanner() {
   el.innerHTML = `
     <div class="winner-banner">
       <div class="trophy">🏆</div>
-      <div class="winner-text">${winnerInfo.emoji} TEAM ${winner.toUpperCase()} WINS!</div>
-      <div class="match-summary">Final: ${match.teamA} ${match.winsA} — ${match.winsB} ${match.teamB}</div>
+      <div class="winner-text">${winnerInfo.emoji} ${winnerInfo.name.toUpperCase()} WINS!</div>
+      <div class="match-summary">Final: ${TEAMS[match.teamA].name} ${match.winsA} — ${match.winsB} ${TEAMS[match.teamB].name}</div>
     </div>`;
 }
 
