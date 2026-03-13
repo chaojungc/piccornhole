@@ -604,6 +604,7 @@
   <a href="livescore.html"><span class="nav-icon">🎯</span> Live Score</a>
   <a href="history.html"><span class="nav-icon">📜</span> Match History</a>
   <a href="leaderboard.html"><span class="nav-icon">🏅</span> Leaderboard</a>
+  <a href="admin.html"><span class="nav-icon">⚙️</span> Admin</a>
 </nav>
 
 <!-- ═══════ NAV ═══════ -->
@@ -894,6 +895,22 @@ const SCHEDULE = [
 // ── State (Firebase real-time) ──
 let _resultsCache = [];
 let _rostersCache = {};
+let _overridesCache = {};
+
+// ── Helper: get effective date for a game, considering overrides ──
+function getGameDate(weekNum, gameSlot, origDate) {
+  const key = weekNum + '_' + gameSlot;
+  const ov = _overridesCache[key];
+  if (ov && ov.newDate) {
+    // Convert ISO "2026-03-11" to friendly "Mar 11"
+    const d = new Date(ov.newDate + 'T00:00:00');
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  }
+  return origDate;
+}
+function isOverridden(weekNum, gameSlot) {
+  return !!_overridesCache[weekNum + '_' + gameSlot];
+}
 
 // ── Standings ──
 function renderStandings(results) {
@@ -960,8 +977,8 @@ function renderSchedule() {
     const rowClass = isCurrent ? 'current-week' : (isPast ? 'past-week' : '');
 
     // Build game cells with action links
-    const g1Html = buildGameCell(s.wk, 'g1', s.g1, results, rosters);
-    const g2Html = buildGameCell(s.wk, 'g2', s.g2, results, rosters);
+    const g1Html = buildGameCell(s.wk, 'g1', s.g1, results, rosters, s.date);
+    const g2Html = buildGameCell(s.wk, 'g2', s.g2, results, rosters, s.date);
 
     return `<tr class="${rowClass}">
       <td><span class="week-num">${s.wk}</span></td>
@@ -973,15 +990,17 @@ function renderSchedule() {
   }).join('');
 }
 
-function buildGameCell(weekNum, gameSlot, teams, results, rosters) {
+function buildGameCell(weekNum, gameSlot, teams, results, rosters, origDate) {
   const label = `${teams[0]} vs ${teams[1]}`;
+  const overrideDate = isOverridden(weekNum, gameSlot) ? getGameDate(weekNum, gameSlot, origDate) : null;
+  const dateNote = overrideDate ? ` <small style="color:var(--accent2);">📅 Played ${overrideDate}</small>` : '';
 
   // Check if match has a result
   const result = results.find(r => r.week === weekNum && r.gameSlot === gameSlot);
   if (result) {
     const scoreText = `${result.winsA}–${result.winsB}`;
     return `<div class="game-cell">
-      <span class="game-label">${label} <small style="color:var(--accent3);font-weight:700;">(${scoreText})</small></span>
+      <span class="game-label">${label} <small style="color:var(--accent3);font-weight:700;">(${scoreText})</small>${dateNote}</span>
       <a href="history.html?week=${weekNum}" class="game-action result">Result</a>
     </div>`;
   }
@@ -991,12 +1010,12 @@ function buildGameCell(weekNum, gameSlot, teams, results, rosters) {
   const rosterB = rosters[`${weekNum}_${teams[1]}`];
   if (rosterA && rosterB) {
     return `<div class="game-cell">
-      <span class="game-label">${label}</span>
+      <span class="game-label">${label}${dateNote}</span>
       <a href="livescore.html?week=${weekNum}&game=${gameSlot}" class="game-action start-match">Start Match</a>
     </div>`;
   }
 
-  return label;
+  return label + (dateNote || '');
 }
 
 // ── Announcements ──
@@ -1007,38 +1026,53 @@ function renderAnnouncements() {
   today.setHours(0, 0, 0, 0);
   const year = today.getFullYear();
 
-  // ── Upcoming Matches: find the nearest future/current week that hasn't been fully played ──
+  // ── Upcoming Matches: find games not yet played whose effective date >= today ──
   const upcomingBody = document.getElementById('upcoming-body');
-  let nextWeek = null;
+
+  // Collect all unplayed games with their effective dates
+  const upcomingGames = [];
   for (let i = 0; i < SCHEDULE.length; i++) {
     const s = SCHEDULE[i];
-    const matchDate = new Date(s.date + ' ' + year);
-    // Skip weeks whose date has already passed AND both games have results
-    const hasResultG1 = results.some(r => r.week === s.wk && r.gameSlot === 'g1');
-    const hasResultG2 = results.some(r => r.week === s.wk && r.gameSlot === 'g2');
-    if (hasResultG1 && hasResultG2) continue; // fully played, skip
-    if (matchDate >= today) {
-      nextWeek = s;
-      break;
-    }
+    ['g1', 'g2'].forEach(slot => {
+      const hasResult = results.some(r => r.week === s.wk && r.gameSlot === slot);
+      if (hasResult) return;
+
+      const effectiveDate = getGameDate(s.wk, slot, s.date);
+      const dateObj = new Date(effectiveDate + ' ' + year);
+      if (dateObj >= today) {
+        upcomingGames.push({
+          wk: s.wk, slot: slot,
+          teams: s[slot], bye: s.bye,
+          origDate: s.date,
+          effectiveDate: effectiveDate,
+          dateObj: dateObj
+        });
+      }
+    });
   }
 
-  if (nextWeek) {
-    const games = [
-      { slot: 'g1', teams: nextWeek.g1 },
-      { slot: 'g2', teams: nextWeek.g2 }
-    ];
+  // Sort by date, then group the soonest date's games
+  upcomingGames.sort((a, b) => a.dateObj - b.dateObj);
+
+  if (upcomingGames.length > 0) {
+    const soonestDate = upcomingGames[0].dateObj.getTime();
+    const nextBatch = upcomingGames.filter(g => g.dateObj.getTime() === soonestDate);
+
     let html = '';
-    games.forEach(g => {
+    nextBatch.forEach(g => {
       const tA = TEAM_INFO[g.teams[0]];
       const tB = TEAM_INFO[g.teams[1]];
-      const rosterA = rosters[nextWeek.wk + '_' + g.teams[0]];
-      const rosterB = rosters[nextWeek.wk + '_' + g.teams[1]];
+      const rosterA = rosters[g.wk + '_' + g.teams[0]];
+      const rosterB = rosters[g.wk + '_' + g.teams[1]];
       const bothIn = rosterA && rosterB;
 
       const rosterBtn = bothIn
         ? '<a href="roster.html" class="roster-action view">✅ View Roster</a>'
         : '<a href="roster.html" class="roster-action submit">Submit Roster</a>';
+
+      const dateLabel = g.effectiveDate !== g.origDate
+        ? g.effectiveDate + ' <small style="color:var(--muted);text-decoration:line-through;">' + g.origDate + '</small>'
+        : g.effectiveDate;
 
       html += '<div class="upcoming-match">';
       html += '<div class="upcoming-match-top">';
@@ -1047,16 +1081,22 @@ function renderAnnouncements() {
       html += '<span class="match-vs">vs</span>';
       html += '<span>' + tB.emoji + ' ' + g.teams[1] + '</span>';
       html += '</div>';
-      html += '<div class="match-date-badge">' + nextWeek.date + '</div>';
+      html += '<div class="match-date-badge">' + dateLabel + '</div>';
       html += '</div>';
       html += '<div class="upcoming-match-bottom">';
-      html += '<div class="match-week-label">Week ' + nextWeek.wk + '</div>';
+      html += '<div class="match-week-label">Week ' + g.wk + '</div>';
       html += rosterBtn;
       html += '</div>';
       html += '</div>';
     });
-    const byeTeam = TEAM_INFO[nextWeek.bye];
-    html += '<div class="match-bye">' + byeTeam.emoji + ' ' + nextWeek.bye + ' has a bye</div>';
+
+    // Show bye info from the first game's week
+    const weekData = SCHEDULE.find(s => s.wk === nextBatch[0].wk);
+    if (weekData) {
+      const byeTeam = TEAM_INFO[weekData.bye];
+      html += '<div class="match-bye">' + byeTeam.emoji + ' ' + weekData.bye + ' has a bye</div>';
+    }
+
     upcomingBody.innerHTML = html;
   } else {
     upcomingBody.innerHTML = '<div class="announce-no-data">No upcoming matches — season complete! 🎉</div>';
@@ -1118,6 +1158,12 @@ db.ref('results').on('value', (snap) => {
 
 db.ref('rosters').on('value', (snap) => {
   _rostersCache = snap.val() || {};
+  renderSchedule();
+  renderAnnouncements();
+});
+
+db.ref('scheduleOverrides').on('value', (snap) => {
+  _overridesCache = snap.val() || {};
   renderSchedule();
   renderAnnouncements();
 });
