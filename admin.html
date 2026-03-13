@@ -411,11 +411,11 @@ const db = firebase.database();
 
 // ── Data ──
 const TEAM_INFO = {
-  Althea:  { emoji: "🔴" },
-  Justin:  { emoji: "🔵" },
-  Nana:    { emoji: "🟣" },
-  Liyu:    { emoji: "🟢" },
-  Landice: { emoji: "🟠" }
+  Althea:  { emoji: "🔴", name: "Team Althea" },
+  Justin:  { emoji: "🔵", name: "Team Justin" },
+  Nana:    { emoji: "🟣", name: "Team Nana" },
+  Liyu:    { emoji: "🟢", name: "Team Liyu" },
+  Landice: { emoji: "🟠", name: "Team Landice" }
 };
 
 const SCHEDULE = [
@@ -474,9 +474,9 @@ function renderWeeks() {
   container.innerHTML = SCHEDULE.map(s => {
     const tA1 = TEAM_INFO[s.g1[0]], tA2 = TEAM_INFO[s.g1[1]];
     const tB1 = TEAM_INFO[s.g2[0]], tB2 = TEAM_INFO[s.g2[1]];
-    const matchups = tA1.emoji + ' ' + s.g1[0] + ' vs ' + tA2.emoji + ' ' + s.g1[1]
-      + ' • ' + tB1.emoji + ' ' + s.g2[0] + ' vs ' + tB2.emoji + ' ' + s.g2[1]
-      + ' • Bye: ' + s.bye;
+    const matchups = tA1.emoji + ' ' + tA1.name + ' vs ' + tA2.emoji + ' ' + tA2.name
+      + ' • ' + tB1.emoji + ' ' + tB1.name + ' vs ' + tB2.emoji + ' ' + tB2.name
+      + ' • Bye: ' + TEAM_INFO[s.bye].name;
 
     // Check overrides
     const ovG1 = _overridesCache[s.wk + '_g1'];
@@ -540,7 +540,7 @@ function buildGameRow(weekNum, slot, teams, origISO, override, result) {
   const isOverridden = override ? true : false;
 
   let html = '<div class="game-row">';
-  html += '<div class="game-label">' + t1.emoji + ' ' + teams[0] + ' vs ' + t2.emoji + ' ' + teams[1] + ' <small>' + slotLabel + '</small></div>';
+  html += '<div class="game-label">' + t1.emoji + ' ' + t1.name + ' vs ' + t2.emoji + ' ' + t2.name + ' <small>' + slotLabel + '</small></div>';
   html += '<div class="game-date-group">';
 
   if (isOverridden) {
