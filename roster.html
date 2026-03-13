@@ -627,7 +627,7 @@
   <div id="tab-manage" class="tab-content active">
     <div class="form-card">
       <label for="manage-team">Your Team</label>
-      <select id="manage-team" onchange="renderManageBoard()">
+      <select id="manage-team" onchange="onTeamChange()">
         <option value="">-- Select your team --</option>
         <option value="Althea">🔴 Team Althea</option>
         <option value="Justin">🔵 Team Justin</option>
@@ -724,6 +724,12 @@ function switchTab(tab) {
   if (tab === 'manage') renderManageBoard();
 }
 
+function onTeamChange() {
+  const team = document.getElementById('manage-team').value;
+  if (team) localStorage.setItem('pcl_team', team);
+  renderManageBoard();
+}
+
 // ── MATCHUP DISPLAY ──
 function getMatchupForTeam(weekNum, teamKey) {
   const week = SCHEDULE[weekNum - 1];
@@ -759,7 +765,7 @@ function renderBoard() {
   let html = '';
   weeks.forEach(wk => {
     const sched = SCHEDULE[wk - 1];
-    html += `<div class="week-section">`;
+    html += `<div class="week-section" id="view-week-${wk}">`;
     html += `<div class="week-header">Week ${wk} — ${sched.date}</div>`;
 
     // Check each game
@@ -919,7 +925,7 @@ function renderManageBoard() {
     if (!matchup) return;
 
     if (matchup.type === 'bye') {
-      html += `<div class="manage-week-card is-bye">
+      html += `<div class="manage-week-card is-bye" id="week-section-${s.wk}">
         <div class="manage-week-header">
           <span class="manage-week-title">Week ${s.wk} — ${s.date}</span>
           <span style="font-size:0.8rem;color:var(--muted);font-weight:600;">BYE WEEK</span>
@@ -933,7 +939,7 @@ function renderManageBoard() {
     // Skip editing state for week shown in upcoming card
     const isEditing = (upcoming && s.wk === upcoming.wk) ? false : (_editingWeek === s.wk);
 
-    html += `<div class="manage-week-card ${cardClass}">`;
+    html += `<div class="manage-week-card ${cardClass}" id="week-section-${s.wk}">`;
     html += `<div class="manage-week-header">`;
     html += `<span class="manage-week-title">Week ${s.wk} — ${s.date}</span>`;
 
@@ -1058,8 +1064,48 @@ function toggleMenu() {
   document.querySelector('.nav-drawer').classList.toggle('open');
 }
 
+// ── URL PARAMS & DEEP LINKING ──
+function handleUrlParams() {
+  const params = new URLSearchParams(window.location.search);
+  const tab = params.get('tab');
+  const team = params.get('team');
+  const week = params.get('week');
+
+  // Restore remembered team (localStorage), URL param overrides
+  const teamSelect = document.getElementById('manage-team');
+  const remembered = localStorage.getItem('pcl_team');
+  if (team && TEAMS[team]) {
+    teamSelect.value = team;
+    localStorage.setItem('pcl_team', team);
+  } else if (remembered && TEAMS[remembered]) {
+    teamSelect.value = remembered;
+  }
+
+  // Switch tab if specified
+  if (tab === 'view') {
+    switchTab('view');
+  } else {
+    switchTab('manage');
+  }
+
+  // Scroll to week section after a short delay (DOM needs to render)
+  if (week) {
+    setTimeout(() => {
+      const prefix = (tab === 'view') ? 'view-week-' : 'week-section-';
+      const el = document.getElementById(prefix + week);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        el.style.transition = 'box-shadow 0.3s';
+        el.style.boxShadow = '0 0 0 3px var(--accent2)';
+        setTimeout(() => { el.style.boxShadow = ''; }, 2000);
+      }
+    }, 300);
+  }
+}
+
 // ── INIT ──
 renderManageBoard();
+handleUrlParams();
 </script>
 
 </body>
