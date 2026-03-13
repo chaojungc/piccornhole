@@ -1007,14 +1007,17 @@ function renderAnnouncements() {
   today.setHours(0, 0, 0, 0);
   const year = today.getFullYear();
 
-  // ── Upcoming Matches: find the next week with no results yet ──
+  // ── Upcoming Matches: find the nearest future/current week that hasn't been fully played ──
   const upcomingBody = document.getElementById('upcoming-body');
   let nextWeek = null;
   for (let i = 0; i < SCHEDULE.length; i++) {
     const s = SCHEDULE[i];
+    const matchDate = new Date(s.date + ' ' + year);
+    // Skip weeks whose date has already passed AND both games have results
     const hasResultG1 = results.some(r => r.week === s.wk && r.gameSlot === 'g1');
     const hasResultG2 = results.some(r => r.week === s.wk && r.gameSlot === 'g2');
-    if (!hasResultG1 || !hasResultG2) {
+    if (hasResultG1 && hasResultG2) continue; // fully played, skip
+    if (matchDate >= today) {
       nextWeek = s;
       break;
     }
