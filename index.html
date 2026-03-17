@@ -1110,24 +1110,20 @@ function renderAnnouncements() {
       html += '<div class="match-date-badge">' + dateLabel + '</div>';
       html += '</div>';
 
-      // Player names row (all rostered players including captain)
-      const playersA = rosterA ? rosterA.players : null;
-      const playersB = rosterB ? rosterB.players : null;
-      if (playersA || playersB) {
+      // Player names row — only reveal when BOTH rosters are submitted
+      if (bothIn) {
+        const playersA = rosterA.players;
+        const playersB = rosterB.players;
         html += '<div class="match-players">';
         html += '<div class="team-players">';
         if (playersA && playersA.length) {
           playersA.forEach(p => { html += '<span class="player-name">' + p + '</span>'; });
-        } else if (!rosterA) {
-          html += '<span class="player-name" style="color:var(--accent2);font-style:italic">Roster pending…</span>';
         }
         html += '</div>';
         html += '<div class="players-vs">vs</div>';
         html += '<div class="team-players">';
         if (playersB && playersB.length) {
           playersB.forEach(p => { html += '<span class="player-name">' + p + '</span>'; });
-        } else if (!rosterB) {
-          html += '<span class="player-name" style="color:var(--accent2);font-style:italic">Roster pending…</span>';
         }
         html += '</div>';
         html += '</div>';
