@@ -790,8 +790,10 @@ function renderScoreboard() {
   document.getElementById('sb-emoji-b').textContent = tB.emoji;
   document.getElementById('sb-name-b').textContent = match.teamB;
 
-  document.getElementById('sb-score-a').textContent = match.roundScoreA;
-  document.getElementById('sb-score-b').textContent = match.roundScoreB;
+  const runningA = match.rounds.reduce((s, r) => s + r.a, 0) + match.roundScoreA;
+  const runningB = match.rounds.reduce((s, r) => s + r.b, 0) + match.roundScoreB;
+  document.getElementById('sb-score-a').textContent = runningA;
+  document.getElementById('sb-score-b').textContent = runningB;
 
   // Series tracker dots
   let dotsHtml = '';
