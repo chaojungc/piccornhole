@@ -1068,13 +1068,14 @@ function renderScoreboard() {
 
 function renderPlayerCards() {
   if (!match) return;
-  const tA = TEAMS[match.teamA], tB = TEAMS[match.teamB];
+  const colorA = match.casual ? '#c0392b' : (TEAMS[match.teamA] ? TEAMS[match.teamA].color : '#c0392b');
+  const colorB = match.casual ? '#2980b9' : (TEAMS[match.teamB] ? TEAMS[match.teamB].color : '#2980b9');
 
   document.getElementById('section-label-a').innerHTML = `${match.teamAInfo.emoji} ${match.teamAInfo.name}`;
   document.getElementById('section-label-b').innerHTML = `${match.teamBInfo.emoji} ${match.teamBInfo.name}`;
 
-  document.getElementById('player-cards-a').innerHTML = match.playersA.map(p => buildPlayerCard(p, 'a', tA.color)).join('');
-  document.getElementById('player-cards-b').innerHTML = match.playersB.map(p => buildPlayerCard(p, 'b', tB.color)).join('');
+  document.getElementById('player-cards-a').innerHTML = match.playersA.map(p => buildPlayerCard(p, 'a', colorA)).join('');
+  document.getElementById('player-cards-b').innerHTML = match.playersB.map(p => buildPlayerCard(p, 'b', colorB)).join('');
 }
 
 function buildPlayerCard(player, side, teamColor) {
