@@ -383,6 +383,84 @@
   }
   .matchup-preview strong { color: var(--accent); }
 
+  /* ── Mode cards (League / Casual) ── */
+  .mode-cards {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px;
+  }
+  .mode-card {
+    border: 2px solid var(--border); border-radius: 14px; padding: 14px 10px;
+    text-align: center; cursor: pointer; transition: all 0.15s; background: white;
+  }
+  .mode-card:hover { border-color: var(--accent2); background: #fffaf4; }
+  .mode-card.selected { border-color: var(--accent2); background: #fff8f0; }
+  .mode-card .mc-icon { font-size: 1.6rem; margin-bottom: 5px; }
+  .mode-card .mc-title { font-weight: 800; font-size: 0.85rem; color: var(--dark); }
+  .mode-card .mc-desc { font-size: 0.68rem; color: var(--muted); margin-top: 2px; }
+  .mode-card.selected .mc-title { color: var(--accent2); }
+  .mode-section { display: none; }
+  .mode-section.visible { display: block; }
+
+  /* ── Casual team blocks ── */
+  .casual-team-block {
+    border: 1.5px solid var(--border); border-radius: 14px; padding: 14px; margin-bottom: 10px;
+    transition: border-color 0.15s;
+  }
+  .casual-team-block:focus-within { border-color: var(--accent2); }
+  .ctb-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+  .ctb-emoji { font-size: 1.3rem; flex-shrink: 0; }
+  .ctb-name-input {
+    flex: 1; padding: 8px 11px; border: 1.5px solid var(--border); border-radius: 10px;
+    font-size: 0.88rem; font-family: 'Inter', sans-serif; font-weight: 700;
+    color: var(--dark); outline: none; background: #fafafa;
+  }
+  .ctb-name-input:focus { border-color: var(--accent2); background: white; }
+  .ctb-players-label {
+    font-size: 0.7rem; font-weight: 700; color: var(--muted);
+    text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;
+  }
+  .ctb-pills { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; min-height: 32px; }
+  .ctb-pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: #f0e8dc; border-radius: 20px; padding: 5px 8px 5px 12px;
+    font-size: 0.8rem; font-weight: 600; color: var(--dark);
+  }
+  .ctb-pill-remove {
+    width: 18px; height: 18px; border-radius: 50%; background: rgba(0,0,0,0.1);
+    border: none; cursor: pointer; font-size: 0.65rem; color: #666;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    transition: background 0.15s, color 0.15s;
+  }
+  .ctb-pill-remove:hover { background: var(--accent); color: white; }
+  .ctb-add-btn {
+    display: inline-flex; align-items: center; gap: 4px;
+    background: none; border: 1.5px dashed #c8bfb0; border-radius: 20px;
+    padding: 5px 12px; font-size: 0.78rem; font-weight: 600; color: var(--muted);
+    cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.15s;
+  }
+  .ctb-add-btn:hover { border-color: var(--accent2); color: var(--accent2); background: #fff8f0; }
+  .ctb-add-input {
+    display: none; align-items: center; gap: 5px;
+    background: white; border: 1.5px solid var(--accent2);
+    border-radius: 20px; padding: 4px 6px 4px 12px;
+  }
+  .ctb-add-input.visible { display: inline-flex; }
+  .ctb-add-input input {
+    border: none; outline: none; font-family: 'Inter', sans-serif;
+    font-size: 0.8rem; font-weight: 600; color: var(--dark);
+    width: 90px; background: transparent;
+  }
+  .ctb-add-input input::placeholder { color: #bbb; font-weight: 400; }
+  .ctb-confirm-btn {
+    width: 20px; height: 20px; border-radius: 50%; background: var(--accent3);
+    border: none; cursor: pointer; font-size: 0.7rem; color: white;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .ctb-cancel-btn {
+    width: 20px; height: 20px; border-radius: 50%; background: #e0d5c1;
+    border: none; cursor: pointer; font-size: 0.7rem; color: #888;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+
   /* ── Round log ── */
   .round-log {
     margin-top: 16px;
@@ -499,19 +577,61 @@
   <!-- Setup phase -->
   <div id="setup-phase">
     <div class="setup-card">
-      <label for="score-week">Match Week</label>
-      <select id="score-week" onchange="onSetupChange()">
-        <option value="">-- Select week --</option>
-      </select>
 
-      <label for="score-game">Game</label>
-      <select id="score-game" onchange="onSetupChange()">
-        <option value="">-- Select game --</option>
-      </select>
+      <!-- Mode selector -->
+      <div class="mode-cards">
+        <div class="mode-card selected" id="mode-card-league" onclick="selectMode('league')">
+          <div class="mc-icon">🏆</div>
+          <div class="mc-title">League Match</div>
+          <div class="mc-desc">Official PCL game — result saved</div>
+        </div>
+        <div class="mode-card" id="mode-card-casual" onclick="selectMode('casual')">
+          <div class="mc-icon">🎲</div>
+          <div class="mc-title">Casual Game</div>
+          <div class="mc-desc">Anyone can play — no record kept</div>
+        </div>
+      </div>
 
-      <div id="setup-preview"></div>
+      <!-- League mode -->
+      <div id="mode-league" class="mode-section visible">
+        <label for="score-week">Match Week</label>
+        <select id="score-week" onchange="onSetupChange()">
+          <option value="">-- Select week --</option>
+        </select>
 
-      <button id="start-match-btn" class="start-btn" disabled onclick="startMatch()">START MATCH 🔥</button>
+        <label for="score-game" style="margin-top:14px;">Game</label>
+        <select id="score-game" onchange="onSetupChange()">
+          <option value="">-- Select game --</option>
+        </select>
+
+        <div id="setup-preview"></div>
+
+        <button id="start-match-btn" class="start-btn" disabled onclick="startMatch()">START MATCH 🔥</button>
+      </div>
+
+      <!-- Casual mode -->
+      <div id="mode-casual" class="mode-section">
+        <div class="casual-team-block">
+          <div class="ctb-header">
+            <div class="ctb-emoji">🔴</div>
+            <input class="ctb-name-input" id="casual-name-a" type="text" placeholder="Team name (optional)" value="Team A">
+          </div>
+          <div class="ctb-players-label">Players</div>
+          <div class="ctb-pills" id="casual-pills-a"></div>
+        </div>
+
+        <div class="casual-team-block">
+          <div class="ctb-header">
+            <div class="ctb-emoji">🔵</div>
+            <input class="ctb-name-input" id="casual-name-b" type="text" placeholder="Team name (optional)" value="Team B">
+          </div>
+          <div class="ctb-players-label">Players</div>
+          <div class="ctb-pills" id="casual-pills-b"></div>
+        </div>
+
+        <button class="start-btn" onclick="startCasualMatch()" style="margin-top:6px;">START MATCH 🔥</button>
+      </div>
+
     </div>
   </div>
 
@@ -653,6 +773,85 @@ function saveResults(data) {
 function loadRosters() { return _rostersCache; }
 
 // ══════════════════════════════════════════════
+//  MODE SELECTION
+// ══════════════════════════════════════════════
+let currentMode = 'league';
+
+function selectMode(mode) {
+  currentMode = mode;
+  document.querySelectorAll('.mode-card').forEach(el => el.classList.remove('selected'));
+  document.querySelectorAll('.mode-section').forEach(el => el.classList.remove('visible'));
+  document.getElementById(`mode-card-${mode}`).classList.add('selected');
+  document.getElementById(`mode-${mode}`).classList.add('visible');
+}
+
+// ── Casual player management ──
+const casualPlayers = { a: [], b: [] };
+
+function renderCasualPills(team) {
+  const container = document.getElementById(`casual-pills-${team}`);
+  container.innerHTML = '';
+
+  casualPlayers[team].forEach((name, idx) => {
+    const pill = document.createElement('div');
+    pill.className = 'ctb-pill';
+    pill.innerHTML = `${name} <button class="ctb-pill-remove" onclick="removeCasualPlayer('${team}', ${idx})">✕</button>`;
+    container.appendChild(pill);
+  });
+
+  // Add button
+  const addBtn = document.createElement('button');
+  addBtn.className = 'ctb-add-btn';
+  addBtn.id = `casual-add-btn-${team}`;
+  addBtn.textContent = '+ Add player';
+  addBtn.onclick = () => showCasualAddInput(team);
+  container.appendChild(addBtn);
+
+  // Inline input (hidden)
+  const addInput = document.createElement('div');
+  addInput.className = 'ctb-add-input';
+  addInput.id = `casual-add-input-${team}`;
+  addInput.innerHTML = `
+    <input type="text" id="casual-add-field-${team}" placeholder="Name…" maxlength="30">
+    <button class="ctb-confirm-btn" onclick="confirmCasualPlayer('${team}')">✓</button>
+    <button class="ctb-cancel-btn" onclick="cancelCasualAdd('${team}')">✕</button>
+  `;
+  container.appendChild(addInput);
+
+  setTimeout(() => {
+    const field = document.getElementById(`casual-add-field-${team}`);
+    if (field) {
+      field.addEventListener('keydown', e => {
+        if (e.key === 'Enter') confirmCasualPlayer(team);
+        if (e.key === 'Escape') cancelCasualAdd(team);
+      });
+    }
+  }, 0);
+}
+
+function showCasualAddInput(team) {
+  document.getElementById(`casual-add-btn-${team}`).style.display = 'none';
+  document.getElementById(`casual-add-input-${team}`).classList.add('visible');
+  document.getElementById(`casual-add-field-${team}`).focus();
+}
+
+function confirmCasualPlayer(team) {
+  const field = document.getElementById(`casual-add-field-${team}`);
+  const name = field.value.trim();
+  if (name) casualPlayers[team].push(name);
+  renderCasualPills(team);
+}
+
+function cancelCasualAdd(team) {
+  renderCasualPills(team);
+}
+
+function removeCasualPlayer(team, idx) {
+  casualPlayers[team].splice(idx, 1);
+  renderCasualPills(team);
+}
+
+// ══════════════════════════════════════════════
 //  SETUP PHASE
 // ══════════════════════════════════════════════
 function populateWeeks() {
@@ -755,10 +954,46 @@ function startMatch() {
   const playersB = getPlayersForTeam(game[1], wkVal);
 
   match = {
+    casual: false,
     week: wkVal,
     gameSlot: gameVal,
     teamA: game[0],
     teamB: game[1],
+    teamAInfo: { emoji: TEAMS[game[0]].emoji, name: TEAMS[game[0]].name },
+    teamBInfo: { emoji: TEAMS[game[1]].emoji, name: TEAMS[game[1]].name },
+    playersA,
+    playersB,
+    playerStats: { ...initPlayerStats(playersA), ...initPlayerStats(playersB) },
+    currentGame: 1,
+    games: [],
+    winsA: 0,
+    winsB: 0,
+    roundScoreA: 0,
+    roundScoreB: 0,
+    actions: [],
+    rounds: [],
+    matchOver: false
+  };
+
+  document.getElementById('setup-phase').style.display = 'none';
+  document.getElementById('scoring-phase').style.display = 'block';
+  renderScoreboard();
+}
+
+function startCasualMatch() {
+  const nameA = document.getElementById('casual-name-a').value.trim() || 'Team A';
+  const nameB = document.getElementById('casual-name-b').value.trim() || 'Team B';
+  const playersA = casualPlayers.a.length ? casualPlayers.a : ['Player 1'];
+  const playersB = casualPlayers.b.length ? casualPlayers.b : ['Player 1'];
+
+  match = {
+    casual: true,
+    week: null,
+    gameSlot: null,
+    teamA: '__casual_a__',
+    teamB: '__casual_b__',
+    teamAInfo: { emoji: '🔴', name: nameA },
+    teamBInfo: { emoji: '🔵', name: nameB },
     playersA,
     playersB,
     playerStats: { ...initPlayerStats(playersA), ...initPlayerStats(playersB) },
@@ -780,15 +1015,17 @@ function startMatch() {
 
 function renderScoreboard() {
   if (!match) return;
-  const tA = TEAMS[match.teamA], tB = TEAMS[match.teamB];
+  const tA = match.teamAInfo, tB = match.teamBInfo;
 
-  document.getElementById('sb-match-info').textContent = `Week ${match.week} — ${SCHEDULE[match.week-1].date}`;
+  document.getElementById('sb-match-info').textContent = match.casual
+    ? 'Casual Game'
+    : `Week ${match.week} — ${SCHEDULE[match.week-1].date}`;
   document.getElementById('sb-game-label').textContent = match.matchOver ? 'MATCH COMPLETE' : `Game ${match.currentGame} of 3`;
 
   document.getElementById('sb-emoji-a').textContent = tA.emoji;
-  document.getElementById('sb-name-a').textContent = match.teamA;
+  document.getElementById('sb-name-a').textContent = tA.name;
   document.getElementById('sb-emoji-b').textContent = tB.emoji;
-  document.getElementById('sb-name-b').textContent = match.teamB;
+  document.getElementById('sb-name-b').textContent = tB.name;
 
   const runningA = match.rounds.reduce((s, r) => s + r.a, 0) + match.roundScoreA;
   const runningB = match.rounds.reduce((s, r) => s + r.b, 0) + match.roundScoreB;
@@ -802,8 +1039,8 @@ function renderScoreboard() {
     let cls = '';
     let label = i;
     if (gameResult) {
-      if (gameResult.winner === 'a') { cls = 'won-a'; label = tA.emoji; }
-      else { cls = 'won-b'; label = tB.emoji; }
+      if (gameResult.winner === 'a') { cls = 'won-a'; label = match.teamAInfo.emoji; }
+      else { cls = 'won-b'; label = match.teamBInfo.emoji; }
     } else if (i === match.currentGame && !match.matchOver) {
       cls = 'current';
     }
@@ -833,8 +1070,8 @@ function renderPlayerCards() {
   if (!match) return;
   const tA = TEAMS[match.teamA], tB = TEAMS[match.teamB];
 
-  document.getElementById('section-label-a').innerHTML = `${tA.emoji} ${tA.name}`;
-  document.getElementById('section-label-b').innerHTML = `${tB.emoji} ${tB.name}`;
+  document.getElementById('section-label-a').innerHTML = `${match.teamAInfo.emoji} ${match.teamAInfo.name}`;
+  document.getElementById('section-label-b').innerHTML = `${match.teamBInfo.emoji} ${match.teamBInfo.name}`;
 
   document.getElementById('player-cards-a').innerHTML = match.playersA.map(p => buildPlayerCard(p, 'a', tA.color)).join('');
   document.getElementById('player-cards-b').innerHTML = match.playersB.map(p => buildPlayerCard(p, 'b', tB.color)).join('');
@@ -900,13 +1137,12 @@ function renderGameWinnerBanner() {
   const el = document.getElementById('game-winner-banner');
   if (!match.matchOver) { el.innerHTML = ''; return; }
 
-  const winner = match.winsA > match.winsB ? match.teamA : match.teamB;
-  const winnerInfo = TEAMS[winner];
+  const winnerInfo = match.winsA > match.winsB ? match.teamAInfo : match.teamBInfo;
   el.innerHTML = `
     <div class="winner-banner">
       <div class="trophy">🏆</div>
       <div class="winner-text">${winnerInfo.emoji} ${winnerInfo.name.toUpperCase()} WINS!</div>
-      <div class="match-summary">Final: ${TEAMS[match.teamA].name} ${match.winsA} — ${match.winsB} ${TEAMS[match.teamB].name}</div>
+      <div class="match-summary">Final: ${match.teamAInfo.name} ${match.winsA} — ${match.winsB} ${match.teamBInfo.name}</div>
     </div>`;
 }
 
@@ -990,7 +1226,7 @@ function endRound() {
 }
 
 function saveMatchResult() {
-  if (!match) return;
+  if (!match || match.casual) return; // casual games are not saved
   const results = loadResults();
 
   const gameScores = match.games.map(g => ({ scoreA: g.scoreA, scoreB: g.scoreB, winner: g.winner, rounds: g.rounds }));
@@ -1022,21 +1258,34 @@ function saveMatchResult() {
 
 function abandonMatch() {
   if (match && !match.matchOver) {
-    if (!confirm('End this match without saving? Any scores from this match will be lost.')) return;
+    const msg = match.casual
+      ? 'End this casual game? Scores will be lost.'
+      : 'End this match without saving? Any scores from this match will be lost.';
+    if (!confirm(msg)) return;
   }
   match = null;
   document.getElementById('scoring-phase').style.display = 'none';
   document.getElementById('setup-phase').style.display = 'block';
+  // Reset league selectors
   document.getElementById('score-week').value = '';
   document.getElementById('score-game').innerHTML = '<option value="">-- Select game --</option>';
   document.getElementById('setup-preview').innerHTML = '';
   document.getElementById('start-match-btn').disabled = true;
+  // Reset casual fields
+  casualPlayers.a = [];
+  casualPlayers.b = [];
+  document.getElementById('casual-name-a').value = 'Team A';
+  document.getElementById('casual-name-b').value = 'Team B';
+  renderCasualPills('a');
+  renderCasualPills('b');
 }
 
 // ══════════════════════════════════════════════
 //  INIT
 // ══════════════════════════════════════════════
 populateWeeks();
+renderCasualPills('a');
+renderCasualPills('b');
 
 // ── URL Parameter Deep-Linking ──
 (function handleUrlParams() {
