@@ -952,13 +952,15 @@ function renderStandings(results) {
       teams[r.teamA].wins += 1;
       teams[r.teamB].losses += 1;
       teams[r.teamA].pts += 3;
+      teams[r.teamB].pts += r.winsB; // 1 pt per game won even in a loss
     } else if (r.winsB >= 2) {
       teams[r.teamB].wins += 1;
       teams[r.teamA].losses += 1;
       teams[r.teamB].pts += 3;
+      teams[r.teamA].pts += r.winsA; // 1 pt per game won even in a loss
     } else {
-      teams[r.teamA].pts += 1;
-      teams[r.teamB].pts += 1;
+      teams[r.teamA].pts += r.winsA;
+      teams[r.teamB].pts += r.winsB;
     }
   });
 
