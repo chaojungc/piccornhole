@@ -328,9 +328,30 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
 let _resultsCache = [];
+let _overridesCache = {};
+
+function isoToFriendly(iso) {
+  const d = new Date(iso + 'T00:00:00');
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
+function getWeekDate(wk) {
+  // Return the actual played date for a week, falling back to scheduled date.
+  // Prefer g1 override, then g2 override, then scheduled date.
+  const g1 = _overridesCache[wk + '_g1'];
+  const g2 = _overridesCache[wk + '_g2'];
+  if (g1 && g1.newDate) return isoToFriendly(g1.newDate);
+  if (g2 && g2.newDate) return isoToFriendly(g2.newDate);
+  return SCHEDULE[wk - 1].date;
+}
 
 db.ref('results').on('value', (snap) => {
   _resultsCache = snap.val() || [];
+  renderHistory();
+});
+
+db.ref('scheduleOverrides').on('value', (snap) => {
+  _overridesCache = snap.val() || {};
   renderHistory();
 });
 
@@ -358,7 +379,7 @@ function renderHistory() {
   weeks.forEach(wk => {
     const sched = SCHEDULE[wk - 1];
     html += `<div class="history-week" data-week="${wk}">`;
-    html += `<div class="history-week-header">Week ${wk} — ${sched.date}</div>`;
+    html += `<div class="history-week-header">Week ${wk} — ${getWeekDate(wk)}</div>`;
 
     byWeek[wk].forEach((r, rIdx) => {
       const tA = TEAMS[r.teamA], tB = TEAMS[r.teamB];
