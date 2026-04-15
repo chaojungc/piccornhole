@@ -673,6 +673,7 @@
       <!-- Round actions -->
       <div class="action-bar">
         <button class="action-btn secondary" onclick="undoLastAction()">Undo</button>
+        <button class="action-btn secondary" id="end-game-btn" onclick="endGameEarly()" style="border-color:rgba(231,76,60,0.5);color:#e74c3c;">End Game</button>
         <button class="action-btn primary" id="end-round-btn" onclick="endRound()">End Round ✓</button>
       </div>
 
@@ -972,7 +973,8 @@ function startMatch() {
     roundScoreB: 0,
     actions: [],
     rounds: [],
-    matchOver: false
+    matchOver: false,
+    overtimeMode: false
   };
 
   document.getElementById('setup-phase').style.display = 'none';
@@ -1005,7 +1007,8 @@ function startCasualMatch() {
     roundScoreB: 0,
     actions: [],
     rounds: [],
-    matchOver: false
+    matchOver: false,
+    overtimeMode: false
   };
 
   document.getElementById('setup-phase').style.display = 'none';
@@ -1020,7 +1023,16 @@ function renderScoreboard() {
   document.getElementById('sb-match-info').textContent = match.casual
     ? 'Casual Game'
     : `Week ${match.week} — ${SCHEDULE[match.week-1].date}`;
-  document.getElementById('sb-game-label').textContent = match.matchOver ? 'MATCH COMPLETE' : `Game ${match.currentGame} of 3`;
+  const roundsPlayed = match.rounds.length;
+  let gameLabel;
+  if (match.matchOver) {
+    gameLabel = 'MATCH COMPLETE';
+  } else if (match.overtimeMode) {
+    gameLabel = `Game ${match.currentGame} of 3 — ⚡ OVERTIME`;
+  } else {
+    gameLabel = `Game ${match.currentGame} of 3 — Round ${roundsPlayed + 1}/10`;
+  }
+  document.getElementById('sb-game-label').textContent = gameLabel;
 
   document.getElementById('sb-emoji-a').textContent = tA.emoji;
   document.getElementById('sb-name-a').textContent = tA.name;
@@ -1058,7 +1070,7 @@ function renderScoreboard() {
   renderRoundLog();
 
   // Disable scoring buttons if match over
-  document.querySelectorAll('.score-btn, #end-round-btn').forEach(b => {
+  document.querySelectorAll('.score-btn, #end-round-btn, #end-game-btn').forEach(b => {
     b.disabled = match.matchOver;
   });
 
@@ -1188,6 +1200,52 @@ function undoLastAction() {
   renderScoreboard();
 }
 
+function endGameEarly() {
+  if (!match || match.matchOver) return;
+
+  const totalA = match.rounds.reduce((s, r) => s + r.a, 0) + match.roundScoreA;
+  const totalB = match.rounds.reduce((s, r) => s + r.b, 0) + match.roundScoreB;
+
+  const tA = match.teamAInfo.name;
+  const tB = match.teamBInfo.name;
+  const msg = totalA === totalB
+    ? `Scores are tied ${totalA}–${totalB}. This will start sudden-death overtime. Continue?`
+    : `End game now? ${totalA > totalB ? tA : tB} leads ${Math.max(totalA, totalB)}–${Math.min(totalA, totalB)}.`;
+
+  if (!confirm(msg)) return;
+
+  // Commit any current round scores as a final round
+  if (match.roundScoreA !== 0 || match.roundScoreB !== 0 || match.actions.length > 0) {
+    match.rounds.push({ a: match.roundScoreA, b: match.roundScoreB, rawA: match.roundScoreA, rawB: match.roundScoreB, throws: [...match.actions] });
+    match.roundScoreA = 0;
+    match.roundScoreB = 0;
+    match.actions = [];
+  }
+
+  const finalA = match.rounds.reduce((s, r) => s + r.a, 0);
+  const finalB = match.rounds.reduce((s, r) => s + r.b, 0);
+
+  if (finalA !== finalB) {
+    const gameWinner = finalA > finalB ? 'a' : 'b';
+    match.games.push({ scoreA: finalA, scoreB: finalB, winner: gameWinner, rounds: [...match.rounds] });
+    if (gameWinner === 'a') match.winsA++; else match.winsB++;
+    match.rounds = [];
+    match.overtimeMode = false;
+
+    if (match.winsA >= 2 || match.winsB >= 2) {
+      match.matchOver = true;
+      saveMatchResult();
+    } else {
+      match.currentGame++;
+    }
+  } else {
+    // Tied — enter sudden-death overtime
+    match.overtimeMode = true;
+  }
+
+  renderScoreboard();
+}
+
 function endRound() {
   if (!match || match.matchOver) return;
 
@@ -1203,8 +1261,12 @@ function endRound() {
   match.roundScoreB = 0;
   match.actions = [];
 
+  const MAX_ROUNDS = 10;
+  const roundCount = match.rounds.length;
+
   if (totalA >= 21 || totalB >= 21) {
-    const gameWinner = totalA >= 21 ? 'a' : 'b';
+    // Someone hit 21 — normal win
+    const gameWinner = totalA >= totalB ? 'a' : 'b';
     match.games.push({
       scoreA: totalA,
       scoreB: totalB,
@@ -1214,12 +1276,39 @@ function endRound() {
 
     if (gameWinner === 'a') match.winsA++; else match.winsB++;
     match.rounds = [];
+    match.overtimeMode = false;
 
     if (match.winsA >= 2 || match.winsB >= 2) {
       match.matchOver = true;
       saveMatchResult();
     } else {
       match.currentGame++;
+    }
+  } else if (roundCount >= MAX_ROUNDS || match.overtimeMode) {
+    // 10-round limit reached (or already in overtime)
+    if (totalA !== totalB) {
+      // Clear winner by score
+      const gameWinner = totalA > totalB ? 'a' : 'b';
+      match.games.push({
+        scoreA: totalA,
+        scoreB: totalB,
+        winner: gameWinner,
+        rounds: [...match.rounds]
+      });
+
+      if (gameWinner === 'a') match.winsA++; else match.winsB++;
+      match.rounds = [];
+      match.overtimeMode = false;
+
+      if (match.winsA >= 2 || match.winsB >= 2) {
+        match.matchOver = true;
+        saveMatchResult();
+      } else {
+        match.currentGame++;
+      }
+    } else {
+      // Tied after 10 rounds — sudden-death overtime, keep playing
+      match.overtimeMode = true;
     }
   }
 
