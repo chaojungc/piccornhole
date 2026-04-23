@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PCL Leaderboard</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bangers&family=Inter:wght@400;500;600;700;900&display=swap');
+
+  :root {
+    --bg: #fdf6ec;
+    --card: #ffffff;
+    --accent: #c0392b;
+    --accent2: #e67e22;
+    --accent3: #27ae60;
+    --dark: #2c3e50;
+    --muted: #7f8c8d;
+    --border: #e0d5c1;
+    --shadow: 0 4px 20px rgba(0,0,0,0.08);
+    --radius: 16px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--dark);
+    line-height: 1.6;
+  }
+
+  /* ── Header ── */
+  .header {
+    background: linear-gradient(135deg, #8B4513 0%, #c0392b 50%, #e67e22 100%);
+    color: white;
+    text-align: center;
+    padding: 32px 20px;
+    position: relative;
+    overflow: hidden;
+  }
+  .header::before {
+    content: '';
+    position: absolute;
+    top: -50%; left: -50%;
+    width: 200%; height: 200%;
+    background: repeating-conic-gradient(rgba(255,255,255,0.03) 0% 25%, transparent 0% 50%);
+    animation: spin 60s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .header h1 {
+    font-family: 'Bangers', cursive;
+    font-size: clamp(1.8rem, 4vw, 2.8rem);
+    letter-spacing: 2px;
+    position: relative;
+    text-shadow: 2px 2px 0 rgba(0,0,0,0.2);
+  }
+  .header .subtitle {
+    font-size: 0.95rem;
+    opacity: 0.85;
+    position: relative;
+    margin-top: 4px;
+  }
+
+  /* ── Hamburger Menu ── */
+  .hamburger-btn {
+    position: absolute;
+    top: 16px; left: 20px;
+    z-index: 1001;
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.3);
+    color: white;
+    width: 40px; height: 40px;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    transition: background 0.2s;
+  }
+  .hamburger-btn:hover { background: rgba(255,255,255,0.25); }
+  .hamburger-btn span {
+    display: block;
+    width: 20px; height: 2px;
+    background: white;
+    border-radius: 2px;
+    transition: all 0.3s;
+  }
+  .hamburger-btn.open span:nth-child(1) { transform: rotate(45deg) translate(5px, 5px); }
+  .hamburger-btn.open span:nth-child(2) { opacity: 0; }
+  .hamburger-btn.open span:nth-child(3) { transform: rotate(-45deg) translate(5px, -5px); }
+
+  .nav-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 999;
+  }
+  .nav-overlay.open { display: block; }
+
+  .nav-drawer {
+    position: fixed;
+    top: 0; left: -280px;
+    width: 280px; height: 100%;
+    background: var(--card);
+    z-index: 1000;
+    transition: left 0.3s ease;
+    box-shadow: 4px 0 20px rgba(0,0,0,0.15);
+    padding: 72px 24px 24px;
+    overflow-y: auto;
+  }
+  .nav-drawer.open { left: 0; }
+  .nav-drawer a {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    text-decoration: none;
+    color: var(--dark);
+    font-weight: 600;
+    font-size: 0.95rem;
+    border-radius: 10px;
+    transition: all 0.2s;
+    margin-bottom: 4px;
+  }
+  .nav-drawer a:hover { background: #f8f1e4; }
+  .nav-drawer a.active { background: var(--accent); color: white; }
+  .nav-drawer .nav-icon { font-size: 1.2rem; width: 28px; text-align: center; }
+
+  /* ── Container ── */
+  .container { max-width: 800px; margin: 0 auto; padding: 32px 20px; }
+
+  /* ── Section label ── */
+  .section-label {
+    font-family: 'Bangers', cursive;
+    font-size: 1.5rem;
+    color: var(--accent);
+    letter-spacing: 2px;
+    margin-bottom: 16px;
+    text-align: center;
+  }
+
+  /* ── Standings table ── */
+  .standings-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    background: var(--card);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--shadow);
+  }
+  .standings-table th {
+    background: var(--dark);
+    color: white;
+    padding: 12px 14px;
+    text-align: left;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .standings-table th.right, .standings-table td.right { text-align: right; }
+  .standings-table th.center, .standings-table td.center { text-align: center; }
+  .standings-table td {
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.9rem;
+  }
+  .standings-table tr:last-child td { border-bottom: none; }
+  .standings-table tr:hover td { background: #fef9f0; }
+  .rank { font-family: 'Bangers', cursive; font-size: 1.3rem; color: var(--accent2); }
+  .team-name-cell { font-weight: 700; }
+  .playoff-tag {
+    display: inline-block;
+    background: #d4edda;
+    color: #155724;
+    font-size: 0.65rem;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: 700;
+    margin-left: 6px;
+    text-transform: uppercase;
+  }
+  .no-data {
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.9rem;
+    padding: 40px 24px;
+    background: var(--card);
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+  }
+
+  /* ── Expandable player rows ── */
+  .player-row { cursor: pointer; user-select: none; }
+  .player-row:hover td { background: #fef3e0; }
+  .expand-arrow {
+    display: inline-block;
+    font-size: 0.7rem;
+    margin-left: 6px;
+    transition: transform 0.2s;
+    color: var(--muted);
+  }
+  .player-row.expanded .expand-arrow { transform: rotate(90deg); }
+  .game-detail-row td {
+    padding: 0 !important;
+    border-bottom: 1px solid var(--border);
+    background: #fdf8f0;
+  }
+  .game-detail-row:last-child td { border-bottom: 1px solid var(--border); }
+  .game-detail-inner {
+    padding: 10px 14px 10px 48px;
+    font-size: 0.82rem;
+    color: #555;
+  }
+  .match-detail {
+    padding: 6px 0;
+    border-bottom: 1px dashed #e8dcc8;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  .match-detail:last-child { border-bottom: none; }
+  .match-detail .match-label {
+    font-weight: 600;
+    color: var(--dark);
+    font-size: 0.82rem;
+  }
+  .match-detail .match-stats {
+    display: flex;
+    gap: 12px;
+    font-size: 0.8rem;
+    color: var(--muted);
+  }
+  .match-detail .match-pts {
+    font-weight: 700;
+    color: var(--accent);
+    min-width: 45px;
+    text-align: right;
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 550px) {
+    .standings-table th, .standings-table td { padding: 8px 6px; font-size: 0.8rem; }
+    .game-detail-inner { padding-left: 28px; }
+  }
+</style>
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
+</head>
+<body>
+
+<header class="header">
+  <button class="hamburger-btn" onclick="toggleMenu()">
+    <span></span><span></span><span></span>
+  </button>
+  <h1>🏅 LEADERBOARD</h1>
+  <p class="subtitle">Season standings &bull; Individual scoring leaders</p>
+</header>
+
+<!-- Hamburger nav -->
+<div class="nav-overlay" onclick="toggleMenu()"></div>
+<nav class="nav-drawer">
+  <a href="index.html"><span class="nav-icon">🏠</span> Home</a>
+  <a href="roster.html"><span class="nav-icon">📋</span> Roster</a>
+  <a href="livescore.html"><span class="nav-icon">🎯</span> Live Score</a>
+  <a href="history.html"><span class="nav-icon">📜</span> Match History</a>
+  <a href="leaderboard.html" class="active"><span class="nav-icon">🏅</span> Leaderboard</a>
+  <a href="admin.html"><span class="nav-icon">⚙️</span> Admin</a>
+</nav>
+
+<div class="container">
+  <div class="section-label">🏅 Season Standings</div>
+  <div id="standings-container"></div>
+</div>
+
+<script>
+// ── Hamburger menu ──
+function toggleMenu() {
+  document.querySelector('.hamburger-btn').classList.toggle('open');
+  document.querySelector('.nav-overlay').classList.toggle('open');
+  document.querySelector('.nav-drawer').classList.toggle('open');
+}
+
+// ── Data ──
+const TEAMS = {
+  Althea:  { emoji: "🔴", name: "Team Althea",  captain: "Althea Gere", color: "#c0392b", players: ["Alex", "Yu-tang Cheng", "Jocelin", "Aaron Chiu", "Palm", "Angela"] },
+  Justin:  { emoji: "🔵", name: "Team Justin",  captain: "Justin Ruan", color: "#2980b9", players: ["Ann Chiang", "Jeff", "Jose Calpito", "CJ", "Rick Lee", "Oscar Shen"] },
+  Nana:    { emoji: "🟣", name: "Team Nana",    captain: "Nana Fu", color: "#8e44ad", players: ["Wen", "Kelvin Chow", "Messi Yang", "Angela Wu", "Kobe", "Amelia Hu"] },
+  Liyu:    { emoji: "🟢", name: "Team Liyu",    captain: "Liyu", color: "#27ae60", players: ["Yanbin", "Tim Chen", "Ashley Hsu", "Brad Lee", "Genie Hou", "Lawrence"] },
+  Landice: { emoji: "🟠", name: "Team Landice", captain: "Landice Fu", color: "#e67e22", players: ["Tinya", "Steve", "Ting-Kai", "Shannon", "Lee Heng", "Yuji"] }
+};
+
+// ── Firebase ──
+const firebaseConfig = {
+  apiKey:            "AIzaSyBeXELSbgnDbLCIUGeB1hSdmOFKbs-KorI",
+  authDomain:        "piccornhole.firebaseapp.com",
+  databaseURL:       "https://piccornhole-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId:         "piccornhole",
+  storageBucket:     "piccornhole.firebasestorage.app",
+  messagingSenderId: "1005077269160",
+  appId:             "1:1005077269160:web:d724b5f66eeb44145a109d"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+let _resultsCache = [];
+
+db.ref('results').on('value', (snap) => {
+  _resultsCache = snap.val() || [];
+  renderStandings();
+});
+
+function loadResults() { return _resultsCache; }
+
+// ── Standings ──
+function computeStandings() {
+  const results = loadResults();
+  const teams = {};
+  Object.keys(TEAMS).forEach(t => {
+    teams[t] = { wins: 0, losses: 0, pts: 0, matchWins: 0, matchLosses: 0, totalScored: 0, totalAllowed: 0 };
+  });
+
+  results.forEach(r => {
+    teams[r.teamA].wins += r.winsA;
+    teams[r.teamA].losses += r.winsB;
+    teams[r.teamB].wins += r.winsB;
+    teams[r.teamB].losses += r.winsA;
+
+    if (r.winsA >= 2) {
+      teams[r.teamA].pts += 3;
+      teams[r.teamA].matchWins++;
+      teams[r.teamB].matchLosses++;
+      teams[r.teamB].pts += r.winsB; // 1 pt per game won even in a loss
+    } else if (r.winsB >= 2) {
+      teams[r.teamB].pts += 3;
+      teams[r.teamB].matchWins++;
+      teams[r.teamA].matchLosses++;
+      teams[r.teamA].pts += r.winsA; // 1 pt per game won even in a loss
+    } else {
+      teams[r.teamA].pts += r.winsA;
+      teams[r.teamB].pts += r.winsB;
+    }
+
+    r.gameScores.forEach(g => {
+      teams[r.teamA].totalScored += g.scoreA;
+      teams[r.teamA].totalAllowed += g.scoreB;
+      teams[r.teamB].totalScored += g.scoreB;
+      teams[r.teamB].totalAllowed += g.scoreA;
+    });
+  });
+
+  const sorted = Object.entries(teams).sort((a, b) => {
+    if (b[1].pts !== a[1].pts) return b[1].pts - a[1].pts;
+    const wpA = a[1].wins / (a[1].wins + a[1].losses || 1);
+    const wpB = b[1].wins / (b[1].wins + b[1].losses || 1);
+    if (wpB !== wpA) return wpB - wpA;
+    const diffA = a[1].totalScored - a[1].totalAllowed;
+    const diffB = b[1].totalScored - b[1].totalAllowed;
+    return diffB - diffA;
+  });
+
+  return sorted;
+}
+
+function renderStandings() {
+  const sorted = computeStandings();
+  const container = document.getElementById('standings-container');
+
+  let html = `<table class="standings-table">
+    <thead><tr>
+      <th>#</th><th>Team</th><th class="center">MW</th><th class="center">ML</th><th class="center">GW</th><th class="center">GL</th><th class="center">PF</th><th class="center">PA</th><th class="center">Pts</th>
+    </tr></thead><tbody>`;
+
+  sorted.forEach(([name, s], i) => {
+    const t = TEAMS[name];
+    const playoffTag = i < 4 ? '<span class="playoff-tag">Playoff</span>' : '';
+    html += `<tr>
+      <td><span class="rank">${i+1}</span></td>
+      <td class="team-name-cell">${t.emoji} ${name}${playoffTag}</td>
+      <td class="center">${s.matchWins}</td>
+      <td class="center">${s.matchLosses}</td>
+      <td class="center">${s.wins}</td>
+      <td class="center">${s.losses}</td>
+      <td class="center">${s.totalScored}</td>
+      <td class="center">${s.totalAllowed}</td>
+      <td class="center"><strong>${s.pts}</strong></td>
+    </tr>`;
+  });
+
+  html += '</tbody></table>';
+  html += '<p style="text-align:center;margin-top:12px;font-size:0.8rem;color:var(--muted);">MW/ML = Match Wins/Losses &bull; GW/GL = Game Wins/Losses &bull; PF/PA = Points For/Against<br>Scoring: Sweep (2-0) = 3pts &bull; Split (1-1) = 1pt each &bull; Loss (0-2) = 0pts</p>';
+
+  // Individual scoring leaders
+  html += renderScoringLeaders();
+
+  container.innerHTML = html;
+}
+
+function renderScoringLeaders() {
+  const results = loadResults();
+  const leaders = {};
+
+  results.forEach(r => {
+    if (!r.playerStats) return;
+    Object.entries(r.playerStats).forEach(([name, s]) => {
+      if (!leaders[name]) {
+        const team = (r.playersA && r.playersA.includes(name)) ? r.teamA :
+                     (r.playersB && r.playersB.includes(name)) ? r.teamB : '?';
+        leaders[name] = { team, holes: 0, leans: 0, boards: 0, pts: 0, matches: 0, games: 0, matchDetails: [] };
+      }
+      leaders[name].holes += s.holes || 0;
+      leaders[name].leans += s.leans || 0;
+      leaders[name].boards += s.boards || 0;
+      leaders[name].pts += s.pts || 0;
+      leaders[name].matches++;
+      const gamesInMatch = (r.winsA || 0) + (r.winsB || 0);
+      leaders[name].games += gamesInMatch;
+      // Store per-match detail for dropdown
+      const opponent = (r.playersA && r.playersA.includes(name)) ? r.teamB : r.teamA;
+      leaders[name].matchDetails.push({
+        week: r.week,
+        opponent,
+        holes: s.holes || 0,
+        leans: s.leans || 0,
+        boards: s.boards || 0,
+        pts: s.pts || 0,
+        games: gamesInMatch
+      });
+    });
+  });
+
+  // Sort by average PTS per game (highest first)
+  const sorted = Object.entries(leaders).filter(([,s]) => s.pts > 0).sort((a, b) => {
+    const avgA = a[1].pts / (a[1].games || 1);
+    const avgB = b[1].pts / (b[1].games || 1);
+    if (avgB !== avgA) return avgB - avgA;
+    return b[1].pts - a[1].pts; // tiebreak: total pts
+  });
+  if (sorted.length === 0) return '';
+
+  let html = '<div class="section-label" style="margin-top:28px;">👑 得分王 — Scoring Leaders</div>';
+  html += '<table class="standings-table"><thead><tr><th>#</th><th>Player</th><th>Team</th><th class="center">🕳️</th><th class="center">🎯</th><th class="center">🟫</th><th class="center">PTS</th><th class="center">G</th></tr></thead><tbody>';
+
+  sorted.slice(0, 15).forEach(([name, s], i) => {
+    const emoji = TEAMS[s.team] ? TEAMS[s.team].emoji : '';
+    const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i+1}`;
+    const avgPts = (s.pts / (s.games || 1)).toFixed(1);
+    const rowId = `player-${i}`;
+
+    // Main player row (clickable)
+    html += `<tr class="player-row" id="${rowId}" onclick="togglePlayerDetail('${rowId}')">
+      <td>${medal}</td>
+      <td><strong>${name}</strong><span class="expand-arrow">&#9654;</span></td>
+      <td>${emoji} ${TEAMS[s.team] ? TEAMS[s.team].name : s.team}</td>
+      <td class="center">${s.holes}</td>
+      <td class="center">${s.leans}</td>
+      <td class="center">${s.boards}</td>
+      <td class="center"><strong>${avgPts}</strong></td>
+      <td class="center">${s.games}</td>
+    </tr>`;
+
+    // Hidden detail row with per-match breakdown
+    html += `<tr class="game-detail-row" id="${rowId}-detail" style="display:none;"><td colspan="8"><div class="game-detail-inner">`;
+    s.matchDetails.sort((a, b) => a.week - b.week).forEach(m => {
+      const oppEmoji = TEAMS[m.opponent] ? TEAMS[m.opponent].emoji : '';
+      html += `<div class="match-detail">
+        <span class="match-label">Week ${m.week} vs ${oppEmoji} ${TEAMS[m.opponent] ? TEAMS[m.opponent].name : m.opponent} (${m.games}G)</span>
+        <span class="match-stats">
+          <span>🕳️${m.holes}</span>
+          <span>🎯${m.leans}</span>
+          <span>🟫${m.boards}</span>
+          <span class="match-pts">${m.pts} pts</span>
+        </span>
+      </div>`;
+    });
+    html += '</div></td></tr>';
+  });
+
+  html += '</tbody></table>';
+  html += '<p style="text-align:center;margin-top:8px;font-size:0.75rem;color:var(--muted);">🕳️ Holes (+3) &bull; 🎯 Leans (+2) &bull; 🟫 Boards (+1) &bull; PTS = Avg per match &bull; M = Matches played<br>Tap a player to see per-match breakdown</p>';
+  return html;
+}
+
+function togglePlayerDetail(rowId) {
+  const row = document.getElementById(rowId);
+  const detail = document.getElementById(rowId + '-detail');
+  if (!row || !detail) return;
+  const isOpen = row.classList.contains('expanded');
+  row.classList.toggle('expanded');
+  detail.style.display = isOpen ? 'none' : 'table-row';
+}
+
+renderStandings();
+</script>
+</body>
+</html>
