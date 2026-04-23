@@ -163,6 +163,13 @@
   .history-team { font-weight: 600; font-size: 0.9rem; }
   .history-team.winner { color: var(--accent3); }
   .history-team.right { text-align: right; }
+  .history-team-players {
+    font-size: 0.72rem;
+    font-weight: 400;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+  .history-team.right .history-team-players { text-align: right; }
   .history-scores {
     text-align: center;
     font-family: 'Bangers', cursive;
@@ -390,7 +397,12 @@ function renderHistory() {
 
       html += `<div class="history-card" style="display:block;">`;
       html += `<div style="display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:12px;">`;
-      html += `<div class="history-team ${winnerA?'winner':''}">${tA.emoji} ${tA.name}${winnerA?' 🏆':''}</div>`;
+      const playersA = r.playersA && r.playersA.length ? r.playersA.join(', ') : '';
+      const playersB = r.playersB && r.playersB.length ? r.playersB.join(', ') : '';
+      html += `<div class="history-team ${winnerA?'winner':''}">
+        ${tA.emoji} ${tA.name}${winnerA?' 🏆':''}
+        ${playersA ? `<div class="history-team-players">${playersA}</div>` : ''}
+      </div>`;
       html += `<div>`;
       html += `<div class="history-scores">${r.winsA} — ${r.winsB}</div>`;
       html += `<div class="history-game-scores">`;
@@ -399,7 +411,10 @@ function renderHistory() {
         html += `<span class="game-score-chip ${cls}">G${i+1}: ${g.scoreA}–${g.scoreB}</span>`;
       });
       html += `</div></div>`;
-      html += `<div class="history-team right ${winnerB?'winner':''}">${winnerB?'🏆 ':''}${tB.name} ${tB.emoji}</div>`;
+      html += `<div class="history-team right ${winnerB?'winner':''}">
+        ${winnerB?'🏆 ':''}${tB.name} ${tB.emoji}
+        ${playersB ? `<div class="history-team-players">${playersB}</div>` : ''}
+      </div>`;
       html += `</div>`;
 
       if (hasRounds) {
