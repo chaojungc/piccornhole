@@ -1261,7 +1261,7 @@ function endRound() {
   match.roundScoreB = 0;
   match.actions = [];
 
-  const MAX_ROUNDS = 10;
+  const MAX_ROUNDS = 20;
   const roundCount = match.rounds.length;
 
   if (totalA >= 21 || totalB >= 21) {
@@ -1285,7 +1285,7 @@ function endRound() {
       match.currentGame++;
     }
   } else if (roundCount >= MAX_ROUNDS || match.overtimeMode) {
-    // 10-round limit reached (or already in overtime)
+    // 20-round limit reached (or already in overtime)
     if (totalA !== totalB) {
       // Clear winner by score
       const gameWinner = totalA > totalB ? 'a' : 'b';
@@ -1307,7 +1307,7 @@ function endRound() {
         match.currentGame++;
       }
     } else {
-      // Tied after 10 rounds — sudden-death overtime, keep playing
+      // Tied after 20 rounds — sudden-death overtime, keep playing
       match.overtimeMode = true;
     }
   }
