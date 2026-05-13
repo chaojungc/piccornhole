@@ -464,16 +464,13 @@ function renderScoringLeaders() {
   if (sorted.length === 0) return '';
 
   let html = '<div class="section-label" style="margin-top:28px;">👑 得分王 — Scoring Leaders</div>';
-  html += '<table class="standings-table"><thead><tr><th>#</th><th>Player</th><th>Team</th><th class="center">🕳️</th><th class="center">🎯</th><th class="center">🟫</th><th class="center">PTS</th><th class="center">W-L</th><th class="center">Win%</th></tr></thead><tbody>';
+  html += '<table class="standings-table"><thead><tr><th>#</th><th>Player</th><th>Team</th><th class="center">🕳️</th><th class="center">🎯</th><th class="center">🟫</th><th class="center">PTS</th><th class="center">W-L</th></tr></thead><tbody>';
 
   sorted.slice(0, 15).forEach(([name, s], i) => {
     const emoji = TEAMS[s.team] ? TEAMS[s.team].emoji : '';
     const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i+1}`;
     const avgPts = (s.pts / (s.games || 1)).toFixed(1);
     const rowId = `player-${i}`;
-
-    const totalDecided = s.wins + s.losses;
-    const winPct = totalDecided > 0 ? Math.round((s.wins / totalDecided) * 100) + '%' : '—';
 
     // Main player row (clickable)
     html += `<tr class="player-row" id="${rowId}" onclick="togglePlayerDetail('${rowId}')">
@@ -485,11 +482,10 @@ function renderScoringLeaders() {
       <td class="center">${s.boards}</td>
       <td class="center"><strong>${avgPts}</strong></td>
       <td class="center">${s.wins}-${s.losses}</td>
-      <td class="center">${winPct}</td>
     </tr>`;
 
     // Hidden detail row with per-match breakdown
-    html += `<tr class="game-detail-row" id="${rowId}-detail" style="display:none;"><td colspan="9"><div class="game-detail-inner">`;
+    html += `<tr class="game-detail-row" id="${rowId}-detail" style="display:none;"><td colspan="8"><div class="game-detail-inner">`;
     s.matchDetails.sort((a, b) => a.week - b.week).forEach(m => {
       const oppEmoji = TEAMS[m.opponent] ? TEAMS[m.opponent].emoji : '';
       const badge = `<span class="result-badge result-${m.result.toLowerCase()}">${m.result}</span>`;
