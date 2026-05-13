@@ -225,6 +225,19 @@
     gap: 4px;
   }
   .match-detail:last-child { border-bottom: none; }
+  .result-badge {
+    display: inline-block;
+    min-width: 18px;
+    padding: 1px 6px;
+    margin-right: 6px;
+    border-radius: 4px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #fff;
+    text-align: center;
+  }
+  .result-w { background: #2d9b3f; }
+  .result-l { background: #c84444; }
   .match-detail .match-label {
     font-weight: 600;
     color: var(--dark);
@@ -412,7 +425,7 @@ function renderScoringLeaders() {
       if (!leaders[name]) {
         const team = (r.playersA && r.playersA.includes(name)) ? r.teamA :
                      (r.playersB && r.playersB.includes(name)) ? r.teamB : '?';
-        leaders[name] = { team, holes: 0, leans: 0, boards: 0, pts: 0, matches: 0, games: 0, matchDetails: [] };
+        leaders[name] = { team, holes: 0, leans: 0, boards: 0, pts: 0, matches: 0, games: 0, wins: 0, losses: 0, matchDetails: [] };
       }
       leaders[name].holes += s.holes || 0;
       leaders[name].leans += s.leans || 0;
@@ -421,8 +434,13 @@ function renderScoringLeaders() {
       leaders[name].matches++;
       const gamesInMatch = (r.winsA || 0) + (r.winsB || 0);
       leaders[name].games += gamesInMatch;
+      const isTeamA = r.playersA && r.playersA.includes(name);
+      const myWins = isTeamA ? (r.winsA || 0) : (r.winsB || 0);
+      const oppWins = isTeamA ? (r.winsB || 0) : (r.winsA || 0);
+      const result = myWins > oppWins ? 'W' : 'L';
+      if (result === 'W') leaders[name].wins++; else leaders[name].losses++;
       // Store per-match detail for dropdown
-      const opponent = (r.playersA && r.playersA.includes(name)) ? r.teamB : r.teamA;
+      const opponent = isTeamA ? r.teamB : r.teamA;
       leaders[name].matchDetails.push({
         week: r.week,
         opponent,
@@ -430,7 +448,8 @@ function renderScoringLeaders() {
         leans: s.leans || 0,
         boards: s.boards || 0,
         pts: s.pts || 0,
-        games: gamesInMatch
+        games: gamesInMatch,
+        result
       });
     });
   });
@@ -445,13 +464,16 @@ function renderScoringLeaders() {
   if (sorted.length === 0) return '';
 
   let html = '<div class="section-label" style="margin-top:28px;">👑 得分王 — Scoring Leaders</div>';
-  html += '<table class="standings-table"><thead><tr><th>#</th><th>Player</th><th>Team</th><th class="center">🕳️</th><th class="center">🎯</th><th class="center">🟫</th><th class="center">PTS</th><th class="center">G</th></tr></thead><tbody>';
+  html += '<table class="standings-table"><thead><tr><th>#</th><th>Player</th><th>Team</th><th class="center">🕳️</th><th class="center">🎯</th><th class="center">🟫</th><th class="center">PTS</th><th class="center">W-L</th><th class="center">Win%</th></tr></thead><tbody>';
 
   sorted.slice(0, 15).forEach(([name, s], i) => {
     const emoji = TEAMS[s.team] ? TEAMS[s.team].emoji : '';
     const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i+1}`;
     const avgPts = (s.pts / (s.games || 1)).toFixed(1);
     const rowId = `player-${i}`;
+
+    const totalDecided = s.wins + s.losses;
+    const winPct = totalDecided > 0 ? Math.round((s.wins / totalDecided) * 100) + '%' : '—';
 
     // Main player row (clickable)
     html += `<tr class="player-row" id="${rowId}" onclick="togglePlayerDetail('${rowId}')">
@@ -462,15 +484,17 @@ function renderScoringLeaders() {
       <td class="center">${s.leans}</td>
       <td class="center">${s.boards}</td>
       <td class="center"><strong>${avgPts}</strong></td>
-      <td class="center">${s.games}</td>
+      <td class="center">${s.wins}-${s.losses}</td>
+      <td class="center">${winPct}</td>
     </tr>`;
 
     // Hidden detail row with per-match breakdown
-    html += `<tr class="game-detail-row" id="${rowId}-detail" style="display:none;"><td colspan="8"><div class="game-detail-inner">`;
+    html += `<tr class="game-detail-row" id="${rowId}-detail" style="display:none;"><td colspan="9"><div class="game-detail-inner">`;
     s.matchDetails.sort((a, b) => a.week - b.week).forEach(m => {
       const oppEmoji = TEAMS[m.opponent] ? TEAMS[m.opponent].emoji : '';
+      const badge = `<span class="result-badge result-${m.result.toLowerCase()}">${m.result}</span>`;
       html += `<div class="match-detail">
-        <span class="match-label">Week ${m.week} vs ${oppEmoji} ${TEAMS[m.opponent] ? TEAMS[m.opponent].name : m.opponent} (${m.games}G)</span>
+        <span class="match-label">${badge} Week ${m.week} vs ${oppEmoji} ${TEAMS[m.opponent] ? TEAMS[m.opponent].name : m.opponent} (${m.games}G)</span>
         <span class="match-stats">
           <span>🕳️${m.holes}</span>
           <span>🎯${m.leans}</span>
