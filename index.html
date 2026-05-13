@@ -994,7 +994,16 @@ function renderSchedule() {
   const year = today.getFullYear();
 
   const tbody = document.getElementById('schedule-body');
-  tbody.innerHTML = SCHEDULE.map(s => {
+
+  const isFinished = s =>
+    results.some(r => r.week === s.wk && r.gameSlot === 'g1') &&
+    results.some(r => r.week === s.wk && r.gameSlot === 'g2');
+
+  const upcoming = SCHEDULE.filter(s => !isFinished(s));
+  const finished = SCHEDULE.filter(isFinished);
+  const ordered = [...upcoming, ...finished];
+
+  tbody.innerHTML = ordered.map(s => {
     const matchDate = new Date(`${s.date} ${year}`);
     const isPast = matchDate < today;
     const weekStart = new Date(matchDate);
