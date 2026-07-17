@@ -309,6 +309,18 @@
     transition: opacity 0.15s;
   }
   .start-match-link:hover { opacity: 0.9; }
+  .submit-roster-link {
+    display: inline-block;
+    color: var(--accent);
+    font-weight: 700;
+    font-size: 0.78rem;
+    text-decoration: none;
+    border: 1.5px dashed var(--accent2);
+    border-radius: 8px;
+    padding: 4px 10px;
+    transition: background 0.15s;
+  }
+  .submit-roster-link:hover { background: #fff3e6; }
 
   /* ── Expandable player rows ── */
   .player-row { cursor: pointer; user-select: none; }
@@ -472,6 +484,10 @@ function teamLabel(name) {
   return TEAMS[name] ? `${TEAMS[name].emoji} ${TEAMS[name].name}` : (name || 'TBD');
 }
 
+function submitRosterLink(team, roundId) {
+  return `<a class="submit-roster-link" href="roster.html?team=${team}&playoff=${roundId}">⏳ No roster — Submit ✍️</a>`;
+}
+
 // ── Render ──
 function render() {
   const container = document.getElementById('playoffs-container');
@@ -580,11 +596,17 @@ function render() {
             html += `<div class="mc-roster-vs"></div>`;
             html += `<div class="mc-roster-side right">${rB.players.map(p => `<span>${p}</span>`).join('')}</div>`;
           } else {
-            html += `<div class="mc-roster-side">${rA ? '🔒 Roster in' : '⏳ No roster'}</div>`;
+            html += `<div class="mc-roster-side">${rA ? '🔒 Roster in' : submitRosterLink(tA, round.id)}</div>`;
             html += `<div class="mc-roster-vs"></div>`;
-            html += `<div class="mc-roster-side right">${rB ? '🔒 Roster in' : '⏳ No roster'}</div>`;
+            html += `<div class="mc-roster-side right">${rB ? '🔒 Roster in' : submitRosterLink(tB, round.id)}</div>`;
           }
           html += '</div>';
+        } else {
+          html += `<div class="mc-rosters">
+            <div class="mc-roster-side">${submitRosterLink(tA, round.id)}</div>
+            <div class="mc-roster-vs"></div>
+            <div class="mc-roster-side right">${submitRosterLink(tB, round.id)}</div>
+          </div>`;
         }
         html += `<a class="start-match-link" href="livescore.html?playoff=${round.id}">▶ START MATCH</a>`;
       }

@@ -1247,6 +1247,23 @@ function handleUrlParams() {
     switchTab('manage');
   }
 
+  // Playoff deep link: open the checklist for that round and scroll to it
+  const playoff = params.get('playoff');
+  if (playoff && PLAYOFF_ROUNDS.some(r => r.id === playoff)) {
+    _editingPlayoffRound = playoff;
+    renderManageBoard();
+    setTimeout(() => {
+      const el = document.getElementById('playoff-section-' + playoff);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        el.style.transition = 'box-shadow 0.3s';
+        el.style.boxShadow = '0 0 0 3px var(--accent2)';
+        setTimeout(() => { el.style.boxShadow = ''; }, 2000);
+      }
+    }, 300);
+    return;
+  }
+
   // Scroll to week section after a short delay (DOM needs to render)
   if (week) {
     setTimeout(() => {
