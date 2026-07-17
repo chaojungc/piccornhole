@@ -7,14 +7,20 @@
 // ══════════════════════════════════════════════
 
 const PLAYOFF_ROUNDS = [
-  { id: 'rr-2v3', stage: 'rr',    seeds: [2, 3], label: '循環賽 ① — #2 seed vs #3 seed' },
-  { id: 'rr-2v4', stage: 'rr',    seeds: [2, 4], label: '循環賽 ② — #2 seed vs #4 seed' },
-  { id: 'rr-3v4', stage: 'rr',    seeds: [3, 4], label: '循環賽 ③ — #3 seed vs #4 seed' },
-  { id: 'final',  stage: 'final', seeds: [1, 0], label: '🏆 FINAL — #1 seed vs 循環賽 winner' }
+  { id: 'rr-2v3', stage: 'rr',    seeds: [2, 3], label: '循環賽 ① — #2 seed vs #3 seed', date: 'Jul 21 (Tue) 5:00 pm' },
+  { id: 'rr-2v4', stage: 'rr',    seeds: [2, 4], label: '循環賽 ② — #2 seed vs #4 seed', date: 'Jul 22 (Wed) 5:00 pm' },
+  { id: 'rr-3v4', stage: 'rr',    seeds: [3, 4], label: '循環賽 ③ — #3 seed vs #4 seed', date: 'Jul 23 (Thu) 5:00 pm' },
+  { id: 'final',  stage: 'final', seeds: [1, 0], label: '🏆 FINAL — #1 seed vs 循環賽 winner', date: 'TBD' }
 ];
 
 // Final format: best of N (TBD — change here once decided)
 const FINAL_BEST_OF = 3;
+
+// ── Manual seeding override ──
+// Firebase regular-season results are incomplete (recorded through Week 9 only),
+// so seeds are set manually from the real final standings.
+// Set to null to fall back to automatic computation from `results`.
+const MANUAL_SEEDS = { 1: 'Althea', 2: 'Liyu', 3: 'Nana', 4: 'Justin' };
 
 // ── Regular-season standings (same logic as leaderboard.html) ──
 // results: array of {teamA, teamB, winsA, winsB, gameScores:[{scoreA,scoreB}]}
@@ -69,6 +75,7 @@ function computeRegularStandings(results, teamNames) {
 
 // Returns { 1: teamName, 2: teamName, 3: teamName, 4: teamName }
 function computeSeeds(results, teamNames) {
+  if (typeof MANUAL_SEEDS !== 'undefined' && MANUAL_SEEDS) return MANUAL_SEEDS;
   const sorted = computeRegularStandings(results, teamNames);
   const seeds = {};
   sorted.slice(0, 4).forEach(([name], i) => { seeds[i + 1] = name; });

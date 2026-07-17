@@ -518,7 +518,7 @@ function render() {
     const cardCls = 'match-card' + (res ? ' played' : '') + (isFinal ? ' final-card' : '');
 
     html += `<div class="${cardCls}">
-      <div class="mc-round">${round.label}</div>`;
+      <div class="mc-round">${round.label}${round.date && !res ? ` &bull; 📅 ${round.date}` : ''}</div>`;
 
     if (res) {
       const aWon = res.winsA > res.winsB;
@@ -535,7 +535,7 @@ function render() {
         <div class="mc-score" style="color:var(--muted);">vs</div>
         <div class="mc-team right">${teamLabel(tB)}</div>
       </div>
-      <div class="mc-pending">${isFinal && !tB ? 'Waiting for 循環賽 winner' : 'Not played yet'}</div>`;
+      <div class="mc-pending">${isFinal && !tB ? 'Waiting for 循環賽 winner' : `Scheduled — ${round.date}`}</div>`;
     }
     html += '</div>';
   });
