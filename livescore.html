@@ -968,7 +968,7 @@ function populatePlayoffRounds() {
   PLAYOFF_ROUNDS.forEach(r => {
     const opt = document.createElement('option');
     opt.value = r.id;
-    opt.textContent = r.label;
+    opt.textContent = r.date && r.date !== 'TBD' ? `${r.label} — ${r.date}` : r.label;
     sel.appendChild(opt);
   });
 }
@@ -1014,8 +1014,9 @@ function startPlayoffMatch() {
   const [tA, tB] = resolvePlayoffTeams(roundId, seeds, loadPlayoffResults());
   if (!tA || !tB) return;
 
-  const playersA = getPlayersForTeam(tA, 'playoff');
-  const playersB = getPlayersForTeam(tB, 'playoff');
+  // Roster keys: playoff_<roundId>_<team> (submitted via roster.html Playoffs section)
+  const playersA = getPlayersForTeam(tA, `playoff_${roundId}`);
+  const playersB = getPlayersForTeam(tB, `playoff_${roundId}`);
 
   match = {
     casual: false,

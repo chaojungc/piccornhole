@@ -594,6 +594,7 @@
 <!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
+<script src="playoff-utils.js"></script>
 </head>
 <body>
 
@@ -697,6 +698,7 @@ const db = firebase.database();
 
 // ── STATE (Firebase-backed with local cache) ──
 let _rostersCache = {};
+let _playoffResultsCache = [];
 
 db.ref('rosters').on('value', (snap) => {
   _rostersCache = snap.val() || {};
@@ -705,6 +707,26 @@ db.ref('rosters').on('value', (snap) => {
   // Re-render manage tab if active
   if (document.querySelector('#tab-manage.active')) renderManageBoard();
 });
+
+db.ref('playoffResults').on('value', (snap) => {
+  _playoffResultsCache = snap.val() || [];
+  if (document.querySelector('#tab-view.active')) renderBoard();
+  if (document.querySelector('#tab-manage.active')) renderManageBoard();
+});
+
+// ── PLAYOFF HELPERS ──
+// Seeds come from MANUAL_SEEDS in playoff-utils.js
+function getPlayoffMatchupsForTeam(teamKey) {
+  const seeds = computeSeeds([], Object.keys(TEAMS));
+  const matches = [];
+  PLAYOFF_ROUNDS.forEach(r => {
+    const [tA, tB] = resolvePlayoffTeams(r.id, seeds, _playoffResultsCache);
+    if (tA === teamKey || tB === teamKey) {
+      matches.push({ round: r, opponent: tA === teamKey ? tB : tA }); // opponent null = TBD
+    }
+  });
+  return matches;
+}
 
 function loadRosters() {
   return _rostersCache;
@@ -758,12 +780,45 @@ function renderBoard() {
     return;
   }
 
-  // Group by week
+  // Group by week (numeric keys only — playoff keys start with "playoff_")
   const weekSet = new Set();
-  allKeys.forEach(k => weekSet.add(parseInt(k.split('_')[0])));
+  allKeys.filter(k => /^\d+_/.test(k)).forEach(k => weekSet.add(parseInt(k.split('_')[0])));
   const weeks = Array.from(weekSet).sort((a, b) => a - b);
 
   let html = '';
+
+  // ── PLAYOFF SECTION (on top) ──
+  const seeds = computeSeeds([], Object.keys(TEAMS));
+  let poHtml = '';
+  PLAYOFF_ROUNDS.forEach(r => {
+    const [tA, tB] = resolvePlayoffTeams(r.id, seeds, _playoffResultsCache);
+    if (!tA || !tB) return;
+    const rosterA = rosters[`playoff_${r.id}_${tA}`];
+    const rosterB = rosters[`playoff_${r.id}_${tB}`];
+    if (!rosterA && !rosterB) return;
+    const bothIn = rosterA && rosterB;
+    const statusClass = bothIn ? 'revealed' : 'waiting';
+    const badge = bothIn
+      ? '<span class="revealed-badge">Lineups Revealed</span>'
+      : '<span class="waiting-badge">Waiting for opponent</span>';
+
+    poHtml += `<div class="game-card ${statusClass}">`;
+    poHtml += `<div class="game-title">${r.label} — ${r.date}<br>${TEAMS[tA].emoji} ${TEAMS[tA].name} vs ${TEAMS[tB].emoji} ${TEAMS[tB].name} ${badge}</div>`;
+    poHtml += `<div class="game-rosters">`;
+    poHtml += `<div class="roster-side"><div class="team-label">${TEAMS[tA].emoji} ${TEAMS[tA].name}</div>`;
+    if (bothIn) poHtml += `<div class="players-list">${rosterA.players.join('<br>')}</div>`;
+    else if (rosterA) poHtml += `<div class="hidden-roster">🔒 Roster submitted — hidden until opponent submits</div>`;
+    else poHtml += `<div class="hidden-roster">⏳ Not yet submitted</div>`;
+    poHtml += `</div><div class="vs-divider">VS</div>`;
+    poHtml += `<div class="roster-side" style="text-align:right;"><div class="team-label">${TEAMS[tB].emoji} ${TEAMS[tB].name}</div>`;
+    if (bothIn) poHtml += `<div class="players-list">${rosterB.players.join('<br>')}</div>`;
+    else if (rosterB) poHtml += `<div class="hidden-roster">🔒 Roster submitted — hidden until opponent submits</div>`;
+    else poHtml += `<div class="hidden-roster">⏳ Not yet submitted</div>`;
+    poHtml += `</div></div></div>`;
+  });
+  if (poHtml) {
+    html += `<div class="week-section" id="view-playoffs"><div class="week-header">🏆 Playoffs</div>${poHtml}</div>`;
+  }
   weeks.forEach(wk => {
     const sched = SCHEDULE[wk - 1];
     html += `<div class="week-section" id="view-week-${wk}">`;
@@ -825,6 +880,7 @@ function renderBoard() {
 
 // ── MANAGE TAB ──
 let _editingWeek = null; // track which week is being edited
+let _editingPlayoffRound = null; // track which playoff round is being edited
 
 // Find the upcoming (next unplayed) week for a team
 function getUpcomingWeek(teamKey) {
@@ -915,6 +971,54 @@ function renderManageBoard() {
     html += `</div>`;
   }
 
+  // ── PLAYOFF ROSTERS ──
+  const poMatches = getPlayoffMatchupsForTeam(teamKey);
+  if (poMatches.length) {
+    html += `<div class="manage-section-label">🏆 Playoffs</div>`;
+    poMatches.forEach(({ round, opponent }) => {
+      const key = `playoff_${round.id}_${teamKey}`;
+      const roster = rosters[key];
+      const isEditing = _editingPlayoffRound === round.id;
+      const oppLabel = opponent ? `${TEAMS[opponent].emoji} ${opponent}` : '❓ TBD (循環賽 winner)';
+      const cardClass = roster ? 'has-roster' : '';
+
+      html += `<div class="manage-week-card ${cardClass}" id="playoff-section-${round.id}">`;
+      html += `<div class="manage-week-header">`;
+      html += `<span class="manage-week-title">${round.label} — ${round.date}</span>`;
+
+      if (isEditing) {
+        html += `<span><button class="save-btn" onclick="savePlayoffEdit('${round.id}', '${teamKey}')">Save</button>`;
+        html += `<button class="cancel-btn" onclick="cancelPlayoffEdit()">Cancel</button></span>`;
+      } else if (roster) {
+        html += `<span><button class="edit-btn" onclick="startPlayoffEdit('${round.id}')">Update</button>`;
+        html += `<button class="delete-btn" onclick="deletePlayoffRoster('${round.id}', '${teamKey}')">Delete</button></span>`;
+      } else {
+        html += `<span><button class="submit-manage-btn" onclick="startPlayoffEdit('${round.id}')">Submit</button></span>`;
+      }
+      html += `</div>`;
+
+      html += `<div class="manage-opponent">vs ${oppLabel}</div>`;
+
+      if (isEditing) {
+        const currentPlayers = roster ? roster.players : [];
+        html += `<div class="manage-edit-checklist" id="playoff-checklist-${round.id}">`;
+        const capChecked = (!roster) || currentPlayers.includes(team.captain) ? 'checked' : '';
+        html += `<label><input type="checkbox" value="${team.captain}" ${capChecked}> ${team.captain} ⭐</label>`;
+        team.players.forEach(p => {
+          const checked = currentPlayers.includes(p) ? 'checked' : '';
+          html += `<label><input type="checkbox" value="${p}" ${checked}> ${p}</label>`;
+        });
+        html += `</div>`;
+      } else if (roster) {
+        html += `<div class="manage-players">${roster.players.map(p => `<span class="player-name">• ${p}</span>`).join(' ')}</div>`;
+      } else {
+        html += `<div class="manage-empty">No roster submitted yet</div>`;
+      }
+
+      html += `</div>`;
+    });
+  }
+
   // ── ALL WEEKS LIST ──
   html += `<div class="manage-section-label">All Weeks</div>`;
 
@@ -983,6 +1087,60 @@ function renderManageBoard() {
 function startManageEdit(weekNum) {
   _editingWeek = weekNum;
   renderManageBoard();
+}
+
+// ── PLAYOFF ROSTER ACTIONS ──
+function startPlayoffEdit(roundId) {
+  _editingPlayoffRound = roundId;
+  renderManageBoard();
+}
+
+function cancelPlayoffEdit() {
+  _editingPlayoffRound = null;
+  renderManageBoard();
+}
+
+function savePlayoffEdit(roundId, teamKey) {
+  const checklist = document.getElementById(`playoff-checklist-${roundId}`);
+  if (!checklist) return;
+  const checked = checklist.querySelectorAll('input[type="checkbox"]:checked');
+  const players = Array.from(checked).map(cb => cb.value);
+
+  if (players.length < 2) {
+    alert('You need at least 2 players for a match!');
+    return;
+  }
+
+  const rosters = loadRosters();
+  const key = `playoff_${roundId}_${teamKey}`;
+  const isNew = !rosters[key];
+  rosters[key] = {
+    team: teamKey,
+    round: roundId,
+    players: players,
+    time: new Date().toISOString()
+  };
+  saveRosters(rosters);
+  _editingPlayoffRound = null;
+
+  if (isNew) {
+    const seeds = computeSeeds([], Object.keys(TEAMS));
+    const [tA, tB] = resolvePlayoffTeams(roundId, seeds, _playoffResultsCache);
+    const opponent = tA === teamKey ? tB : tA;
+    if (opponent && rosters[`playoff_${roundId}_${opponent}`]) {
+      alert(`Both rosters are in! Lineups for ${teamKey} vs ${opponent} are now revealed on the View Rosters tab.`);
+    } else if (opponent) {
+      alert(`Playoff roster submitted! Waiting for Team ${opponent} to submit — lineups stay hidden until then.`);
+    }
+  }
+}
+
+function deletePlayoffRoster(roundId, teamKey) {
+  const round = PLAYOFF_ROUNDS.find(r => r.id === roundId);
+  if (!confirm(`Delete playoff roster for ${round ? round.label : roundId}? This will hide the lineup again.`)) return;
+  const rosters = loadRosters();
+  delete rosters[`playoff_${roundId}_${teamKey}`];
+  saveRosters(rosters);
 }
 
 function cancelManageEdit() {
