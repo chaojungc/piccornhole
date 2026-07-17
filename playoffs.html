@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PCL Playoffs</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bangers&family=Inter:wght@400;500;600;700;900&display=swap');
+
+  :root {
+    --bg: #fdf6ec;
+    --card: #ffffff;
+    --accent: #c0392b;
+    --accent2: #e67e22;
+    --accent3: #27ae60;
+    --gold: #d4a017;
+    --dark: #2c3e50;
+    --muted: #7f8c8d;
+    --border: #e0d5c1;
+    --shadow: 0 4px 20px rgba(0,0,0,0.08);
+    --radius: 16px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--dark);
+    line-height: 1.6;
+  }
+
+  /* ── Header ── */
+  .header {
+    background: linear-gradient(135deg, #6b3410 0%, #b8860b 50%, #d4a017 100%);
+    color: white;
+    text-align: center;
+    padding: 32px 20px;
+    position: relative;
+    overflow: hidden;
+  }
+  .header::before {
+    content: '';
+    position: absolute;
+    top: -50%; left: -50%;
+    width: 200%; height: 200%;
+    background: repeating-conic-gradient(rgba(255,255,255,0.03) 0% 25%, transparent 0% 50%);
+    animation: spin 60s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .header h1 {
+    font-family: 'Bangers', cursive;
+    font-size: clamp(1.8rem, 4vw, 2.8rem);
+    letter-spacing: 2px;
+    position: relative;
+    text-shadow: 2px 2px 0 rgba(0,0,0,0.2);
+  }
+  .header .subtitle {
+    font-size: 0.95rem;
+    opacity: 0.85;
+    position: relative;
+    margin-top: 4px;
+  }
+
+  /* ── Hamburger Menu ── */
+  .hamburger-btn {
+    position: absolute;
+    top: 16px; left: 20px;
+    z-index: 1001;
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.3);
+    color: white;
+    width: 40px; height: 40px;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    transition: background 0.2s;
+  }
+  .hamburger-btn:hover { background: rgba(255,255,255,0.25); }
+  .hamburger-btn span {
+    display: block;
+    width: 20px; height: 2px;
+    background: white;
+    border-radius: 2px;
+    transition: all 0.3s;
+  }
+  .hamburger-btn.open span:nth-child(1) { transform: rotate(45deg) translate(5px, 5px); }
+  .hamburger-btn.open span:nth-child(2) { opacity: 0; }
+  .hamburger-btn.open span:nth-child(3) { transform: rotate(-45deg) translate(5px, -5px); }
+
+  .nav-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 999;
+  }
+  .nav-overlay.open { display: block; }
+
+  .nav-drawer {
+    position: fixed;
+    top: 0; left: -280px;
+    width: 280px; height: 100%;
+    background: var(--card);
+    z-index: 1000;
+    transition: left 0.3s ease;
+    box-shadow: 4px 0 20px rgba(0,0,0,0.15);
+    padding: 72px 24px 24px;
+    overflow-y: auto;
+  }
+  .nav-drawer.open { left: 0; }
+  .nav-drawer a {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    text-decoration: none;
+    color: var(--dark);
+    font-weight: 600;
+    font-size: 0.95rem;
+    border-radius: 10px;
+    transition: all 0.2s;
+    margin-bottom: 4px;
+  }
+  .nav-drawer a:hover { background: #f8f1e4; }
+  .nav-drawer a.active { background: var(--accent); color: white; }
+  .nav-drawer .nav-icon { font-size: 1.2rem; width: 28px; text-align: center; }
+
+  /* ── Container ── */
+  .container { max-width: 800px; margin: 0 auto; padding: 32px 20px; }
+
+  .section-label {
+    font-family: 'Bangers', cursive;
+    font-size: 1.5rem;
+    color: var(--accent);
+    letter-spacing: 2px;
+    margin: 28px 0 16px;
+    text-align: center;
+  }
+  .section-label:first-child { margin-top: 0; }
+
+  /* ── Champion banner ── */
+  .champion-banner {
+    background: linear-gradient(135deg, #d4a017, #f1c40f);
+    color: #6b3410;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    text-align: center;
+    padding: 28px 20px;
+    margin-bottom: 8px;
+  }
+  .champion-banner .trophy { font-size: 3rem; }
+  .champion-banner .champ-title {
+    font-family: 'Bangers', cursive;
+    font-size: 1.4rem;
+    letter-spacing: 2px;
+  }
+  .champion-banner .champ-team {
+    font-family: 'Bangers', cursive;
+    font-size: 2.2rem;
+    letter-spacing: 2px;
+    text-shadow: 1px 1px 0 rgba(255,255,255,0.4);
+  }
+
+  /* ── Seeding cards ── */
+  .seed-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+  }
+  .seed-card {
+    background: var(--card);
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    text-align: center;
+    padding: 14px 8px;
+    border-top: 4px solid var(--border);
+  }
+  .seed-card.seed-1 { border-top-color: var(--gold); }
+  .seed-card .seed-num {
+    font-family: 'Bangers', cursive;
+    font-size: 1.1rem;
+    color: var(--accent2);
+  }
+  .seed-card .seed-emoji { font-size: 1.6rem; }
+  .seed-card .seed-name { font-weight: 700; font-size: 0.85rem; }
+  .seed-card .seed-path { font-size: 0.68rem; color: var(--muted); }
+
+  /* ── Standings table (same as leaderboard) ── */
+  .standings-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    background: var(--card);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--shadow);
+  }
+  .standings-table th {
+    background: var(--dark);
+    color: white;
+    padding: 12px 14px;
+    text-align: left;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .standings-table th.center, .standings-table td.center { text-align: center; }
+  .standings-table td {
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.9rem;
+  }
+  .standings-table tr:last-child td { border-bottom: none; }
+  .standings-table tr:hover td { background: #fef9f0; }
+  .rank { font-family: 'Bangers', cursive; font-size: 1.3rem; color: var(--accent2); }
+  .team-name-cell { font-weight: 700; }
+  .advance-tag {
+    display: inline-block;
+    background: #fff3cd;
+    color: #856404;
+    font-size: 0.65rem;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: 700;
+    margin-left: 6px;
+    text-transform: uppercase;
+  }
+
+  /* ── Match cards ── */
+  .match-card {
+    background: var(--card);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 16px 18px;
+    margin-bottom: 12px;
+    border-left: 4px solid var(--border);
+  }
+  .match-card.played { border-left-color: var(--accent3); }
+  .match-card.final-card { border-left-color: var(--gold); }
+  .match-card .mc-round {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--muted);
+    font-weight: 700;
+  }
+  .match-card .mc-teams {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: 6px;
+    flex-wrap: wrap;
+  }
+  .match-card .mc-team { font-weight: 700; font-size: 0.95rem; flex: 1; }
+  .match-card .mc-team.right { text-align: right; }
+  .match-card .mc-team.winner-team { color: var(--accent3); }
+  .match-card .mc-score {
+    font-family: 'Bangers', cursive;
+    font-size: 1.6rem;
+    letter-spacing: 3px;
+    white-space: nowrap;
+  }
+  .match-card .mc-pending {
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.85rem;
+    margin-top: 4px;
+  }
+  .mc-games {
+    margin-top: 10px;
+    padding-top: 8px;
+    border-top: 1px dashed #e8dcc8;
+    font-size: 0.8rem;
+    color: var(--muted);
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  /* ── Expandable player rows ── */
+  .player-row { cursor: pointer; user-select: none; }
+  .player-row:hover td { background: #fef3e0; }
+  .expand-arrow {
+    display: inline-block;
+    font-size: 0.7rem;
+    margin-left: 6px;
+    transition: transform 0.2s;
+    color: var(--muted);
+  }
+  .player-row.expanded .expand-arrow { transform: rotate(90deg); }
+  .game-detail-row td {
+    padding: 0 !important;
+    border-bottom: 1px solid var(--border);
+    background: #fdf8f0;
+  }
+  .game-detail-inner {
+    padding: 10px 14px 10px 48px;
+    font-size: 0.82rem;
+    color: #555;
+  }
+  .match-detail {
+    padding: 6px 0;
+    border-bottom: 1px dashed #e8dcc8;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  .match-detail:last-child { border-bottom: none; }
+  .result-badge {
+    display: inline-block;
+    min-width: 18px;
+    padding: 1px 6px;
+    margin-right: 6px;
+    border-radius: 4px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #fff;
+    text-align: center;
+  }
+  .result-w { background: #2d9b3f; }
+  .result-l { background: #c84444; }
+  .match-detail .match-label {
+    font-weight: 600;
+    color: var(--dark);
+    font-size: 0.82rem;
+  }
+  .match-detail .match-stats {
+    display: flex;
+    gap: 12px;
+    font-size: 0.8rem;
+    color: var(--muted);
+  }
+  .match-detail .match-pts {
+    font-weight: 700;
+    color: var(--accent);
+    min-width: 45px;
+    text-align: right;
+  }
+
+  .no-data {
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.9rem;
+    padding: 40px 24px;
+    background: var(--card);
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 550px) {
+    .standings-table th, .standings-table td { padding: 8px 6px; font-size: 0.8rem; }
+    .game-detail-inner { padding-left: 28px; }
+    .seed-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
+<!-- Shared playoff logic -->
+<script src="playoff-utils.js"></script>
+</head>
+<body>
+
+<header class="header">
+  <button class="hamburger-btn" onclick="toggleMenu()">
+    <span></span><span></span><span></span>
+  </button>
+  <h1>🏆 PLAYOFFS</h1>
+  <p class="subtitle">循環賽 (seeds 2–4) &bull; Winner meets the #1 seed in the Final</p>
+</header>
+
+<!-- Hamburger nav -->
+<div class="nav-overlay" onclick="toggleMenu()"></div>
+<nav class="nav-drawer">
+  <a href="index.html"><span class="nav-icon">🏠</span> Home</a>
+  <a href="roster.html"><span class="nav-icon">📋</span> Roster</a>
+  <a href="livescore.html"><span class="nav-icon">🎯</span> Live Score</a>
+  <a href="history.html"><span class="nav-icon">📜</span> Match History</a>
+  <a href="leaderboard.html"><span class="nav-icon">🏅</span> Leaderboard</a>
+  <a href="playoffs.html" class="active"><span class="nav-icon">🏆</span> Playoffs</a>
+  <a href="admin.html"><span class="nav-icon">⚙️</span> Admin</a>
+</nav>
+
+<div class="container" id="playoffs-container">
+  <div class="no-data">Loading playoff data…</div>
+</div>
+
+<script>
+// ── Hamburger menu ──
+function toggleMenu() {
+  document.querySelector('.hamburger-btn').classList.toggle('open');
+  document.querySelector('.nav-overlay').classList.toggle('open');
+  document.querySelector('.nav-drawer').classList.toggle('open');
+}
+
+// ── Data ──
+const TEAMS = {
+  Althea:  { emoji: "🔴", name: "Team Althea",  captain: "Althea Gere", color: "#c0392b" },
+  Justin:  { emoji: "🔵", name: "Team Justin",  captain: "Justin Ruan", color: "#2980b9" },
+  Nana:    { emoji: "🟣", name: "Team Nana",    captain: "Nana Fu", color: "#8e44ad" },
+  Liyu:    { emoji: "🟢", name: "Team Liyu",    captain: "Liyu", color: "#27ae60" },
+  Landice: { emoji: "🟠", name: "Team Landice", captain: "Landice Fu", color: "#e67e22" }
+};
+
+// ── Firebase ──
+const firebaseConfig = {
+  apiKey:            "AIzaSyBeXELSbgnDbLCIUGeB1hSdmOFKbs-KorI",
+  authDomain:        "piccornhole.firebaseapp.com",
+  databaseURL:       "https://piccornhole-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId:         "piccornhole",
+  storageBucket:     "piccornhole.firebasestorage.app",
+  messagingSenderId: "1005077269160",
+  appId:             "1:1005077269160:web:d724b5f66eeb44145a109d"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+let _resultsCache = [];
+let _playoffResultsCache = [];
+
+db.ref('results').on('value', (snap) => {
+  _resultsCache = snap.val() || [];
+  render();
+});
+db.ref('playoffResults').on('value', (snap) => {
+  _playoffResultsCache = snap.val() || [];
+  render();
+});
+
+function teamLabel(name) {
+  return TEAMS[name] ? `${TEAMS[name].emoji} ${TEAMS[name].name}` : (name || 'TBD');
+}
+
+// ── Render ──
+function render() {
+  const container = document.getElementById('playoffs-container');
+  const seeds = computeSeeds(_resultsCache, Object.keys(TEAMS));
+  const po = _playoffResultsCache;
+
+  let html = '';
+
+  // Champion banner (when final is done)
+  const finalRes = po.find(r => r.round === 'final');
+  if (finalRes && (finalRes.winsA !== finalRes.winsB)) {
+    const champ = finalRes.winsA > finalRes.winsB ? finalRes.teamA : finalRes.teamB;
+    html += `<div class="champion-banner">
+      <div class="trophy">🏆</div>
+      <div class="champ-title">PCL CHAMPIONS</div>
+      <div class="champ-team">${TEAMS[champ].emoji} ${TEAMS[champ].name}</div>
+    </div>`;
+  }
+
+  // Seeding
+  html += '<div class="section-label">🎖️ Playoff Seeding</div>';
+  if (Object.keys(seeds).length < 4) {
+    html += '<div class="no-data">Waiting for regular-season results…</div>';
+  } else {
+    html += '<div class="seed-grid">';
+    [1, 2, 3, 4].forEach(n => {
+      const t = seeds[n];
+      const path = n === 1 ? 'Straight to Final' : '循環賽';
+      html += `<div class="seed-card seed-${n}">
+        <div class="seed-num">#${n} SEED</div>
+        <div class="seed-emoji">${TEAMS[t].emoji}</div>
+        <div class="seed-name">${TEAMS[t].name}</div>
+        <div class="seed-path">${path}</div>
+      </div>`;
+    });
+    html += '</div>';
+  }
+
+  // Round-robin standings
+  html += '<div class="section-label">🔄 循環賽 Standings</div>';
+  const rrSorted = computeRRStandings(po, seeds);
+  const anyRRPlayed = po.some(r => r.round && r.round.startsWith('rr-'));
+  if (!anyRRPlayed) {
+    html += '<div class="no-data">No 循環賽 matches played yet. Seeds 2–4 play each other once — winner advances to the Final.</div>';
+  } else {
+    const rrDone = isRRComplete(po);
+    html += `<table class="standings-table">
+      <thead><tr>
+        <th>#</th><th>Team</th><th class="center">P</th><th class="center">MW</th><th class="center">ML</th><th class="center">GW</th><th class="center">GL</th><th class="center">PF</th><th class="center">PA</th><th class="center">Pts</th>
+      </tr></thead><tbody>`;
+    rrSorted.forEach(([name, s], i) => {
+      const tag = (i === 0 && rrDone) ? '<span class="advance-tag">→ Final</span>' : '';
+      html += `<tr>
+        <td><span class="rank">${i+1}</span></td>
+        <td class="team-name-cell">${TEAMS[name].emoji} ${name}${tag}</td>
+        <td class="center">${s.played}</td>
+        <td class="center">${s.matchWins}</td>
+        <td class="center">${s.matchLosses}</td>
+        <td class="center">${s.wins}</td>
+        <td class="center">${s.losses}</td>
+        <td class="center">${s.totalScored}</td>
+        <td class="center">${s.totalAllowed}</td>
+        <td class="center"><strong>${s.pts}</strong></td>
+      </tr>`;
+    });
+    html += '</tbody></table>';
+    html += '<p style="text-align:center;margin-top:12px;font-size:0.8rem;color:var(--muted);">Same scoring as regular season: Sweep (2-0) = 3pts &bull; Split (1-1) = 1pt each<br>Tiebreak: Pts → Head-to-head → Point differential</p>';
+  }
+
+  // Match cards
+  html += '<div class="section-label">🥊 Playoff Matches</div>';
+  PLAYOFF_ROUNDS.forEach(round => {
+    const res = po.find(r => r.round === round.id);
+    const [tA, tB] = res ? [res.teamA, res.teamB] : resolvePlayoffTeams(round.id, seeds, po);
+    const isFinal = round.stage === 'final';
+    const cardCls = 'match-card' + (res ? ' played' : '') + (isFinal ? ' final-card' : '');
+
+    html += `<div class="${cardCls}">
+      <div class="mc-round">${round.label}</div>`;
+
+    if (res) {
+      const aWon = res.winsA > res.winsB;
+      html += `<div class="mc-teams">
+        <div class="mc-team ${aWon ? 'winner-team' : ''}">${teamLabel(res.teamA)}${aWon ? ' ✓' : ''}</div>
+        <div class="mc-score">${res.winsA} — ${res.winsB}</div>
+        <div class="mc-team right ${!aWon ? 'winner-team' : ''}">${!aWon ? '✓ ' : ''}${teamLabel(res.teamB)}</div>
+      </div>`;
+      const games = (res.gameScores || []).map((g, i) => `G${i+1}: ${g.scoreA}–${g.scoreB}`);
+      if (games.length) html += `<div class="mc-games"><span>${games.join('</span><span>')}</span></div>`;
+    } else {
+      html += `<div class="mc-teams">
+        <div class="mc-team">${teamLabel(tA)}</div>
+        <div class="mc-score" style="color:var(--muted);">vs</div>
+        <div class="mc-team right">${teamLabel(tB)}</div>
+      </div>
+      <div class="mc-pending">${isFinal && !tB ? 'Waiting for 循環賽 winner' : 'Not played yet'}</div>`;
+    }
+    html += '</div>';
+  });
+
+  // Playoff scoring leaders
+  html += renderPlayoffLeaders(po);
+
+  container.innerHTML = html;
+}
+
+// ── Playoff scoring leaders (得分王) ──
+function renderPlayoffLeaders(results) {
+  const leaders = {};
+
+  (results || []).forEach(r => {
+    if (!r.playerStats) return;
+    Object.entries(r.playerStats).forEach(([name, s]) => {
+      if (!leaders[name]) {
+        const team = (r.playersA && r.playersA.includes(name)) ? r.teamA :
+                     (r.playersB && r.playersB.includes(name)) ? r.teamB : '?';
+        leaders[name] = { team, holes: 0, leans: 0, boards: 0, pts: 0, matches: 0, games: 0, wins: 0, losses: 0, matchDetails: [] };
+      }
+      leaders[name].holes += s.holes || 0;
+      leaders[name].leans += s.leans || 0;
+      leaders[name].boards += s.boards || 0;
+      leaders[name].pts += s.pts || 0;
+      leaders[name].matches++;
+      const gamesInMatch = (r.winsA || 0) + (r.winsB || 0);
+      leaders[name].games += gamesInMatch;
+      const isTeamA = r.playersA && r.playersA.includes(name);
+      const myWins = isTeamA ? (r.winsA || 0) : (r.winsB || 0);
+      const oppWins = isTeamA ? (r.winsB || 0) : (r.winsA || 0);
+      const result = myWins > oppWins ? 'W' : 'L';
+      if (result === 'W') leaders[name].wins++; else leaders[name].losses++;
+      const opponent = isTeamA ? r.teamB : r.teamA;
+      leaders[name].matchDetails.push({
+        roundLabel: r.roundLabel || r.round,
+        opponent,
+        holes: s.holes || 0,
+        leans: s.leans || 0,
+        boards: s.boards || 0,
+        pts: s.pts || 0,
+        games: gamesInMatch,
+        result
+      });
+    });
+  });
+
+  const sorted = Object.entries(leaders).filter(([,s]) => s.pts > 0).sort((a, b) => {
+    const avgA = a[1].pts / (a[1].games || 1);
+    const avgB = b[1].pts / (b[1].games || 1);
+    if (avgB !== avgA) return avgB - avgA;
+    return b[1].pts - a[1].pts;
+  });
+  if (sorted.length === 0) return '';
+
+  let html = '<div class="section-label">👑 Playoff 得分王 — Scoring Leaders</div>';
+  html += '<table class="standings-table"><thead><tr><th>#</th><th>Player</th><th>Team</th><th class="center">🕳️</th><th class="center">🎯</th><th class="center">🟫</th><th class="center">PTS</th><th class="center">W-L</th></tr></thead><tbody>';
+
+  sorted.slice(0, 15).forEach(([name, s], i) => {
+    const emoji = TEAMS[s.team] ? TEAMS[s.team].emoji : '';
+    const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i+1}`;
+    const avgPts = (s.pts / (s.games || 1)).toFixed(1);
+    const rowId = `po-player-${i}`;
+
+    html += `<tr class="player-row" id="${rowId}" onclick="togglePlayerDetail('${rowId}')">
+      <td>${medal}</td>
+      <td><strong>${name}</strong><span class="expand-arrow">&#9654;</span></td>
+      <td>${emoji} ${TEAMS[s.team] ? TEAMS[s.team].name : s.team}</td>
+      <td class="center">${s.holes}</td>
+      <td class="center">${s.leans}</td>
+      <td class="center">${s.boards}</td>
+      <td class="center"><strong>${avgPts}</strong></td>
+      <td class="center">${s.wins}-${s.losses}</td>
+    </tr>`;
+
+    html += `<tr class="game-detail-row" id="${rowId}-detail" style="display:none;"><td colspan="8"><div class="game-detail-inner">`;
+    s.matchDetails.forEach(m => {
+      const oppEmoji = TEAMS[m.opponent] ? TEAMS[m.opponent].emoji : '';
+      const badge = `<span class="result-badge result-${m.result.toLowerCase()}">${m.result}</span>`;
+      html += `<div class="match-detail">
+        <span class="match-label">${badge} ${m.roundLabel} vs ${oppEmoji} ${TEAMS[m.opponent] ? TEAMS[m.opponent].name : m.opponent} (${m.games}G)</span>
+        <span class="match-stats">
+          <span>🕳️${m.holes}</span>
+          <span>🎯${m.leans}</span>
+          <span>🟫${m.boards}</span>
+          <span class="match-pts">${m.pts} pts</span>
+        </span>
+      </div>`;
+    });
+    html += '</div></td></tr>';
+  });
+
+  html += '</tbody></table>';
+  html += '<p style="text-align:center;margin-top:8px;font-size:0.75rem;color:var(--muted);">🕳️ Holes (+3) &bull; 🎯 Leans (+2) &bull; 🟫 Boards (+1) &bull; PTS = Avg per game &bull; Playoff matches only<br>Tap a player to see per-match breakdown</p>';
+  return html;
+}
+
+function togglePlayerDetail(rowId) {
+  const row = document.getElementById(rowId);
+  const detail = document.getElementById(rowId + '-detail');
+  if (!row || !detail) return;
+  const isOpen = row.classList.contains('expanded');
+  row.classList.toggle('expanded');
+  detail.style.display = isOpen ? 'none' : 'table-row';
+}
+
+render();
+</script>
+</body>
+</html>
