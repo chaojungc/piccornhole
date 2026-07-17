@@ -256,6 +256,30 @@
     text-align: right;
   }
 
+  /* ── Pagination ── */
+  .pager {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    margin-top: 14px;
+  }
+  .pager-btn {
+    background: var(--card);
+    border: 2px solid var(--border);
+    color: var(--dark);
+    font-weight: 700;
+    font-size: 0.85rem;
+    padding: 8px 16px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: 'Inter', sans-serif;
+  }
+  .pager-btn:hover:not(:disabled) { border-color: var(--accent2); background: #fff8f0; }
+  .pager-btn:disabled { opacity: 0.4; cursor: default; }
+  .pager-info { font-size: 0.8rem; color: var(--muted); font-weight: 600; }
+
   /* ── Responsive ── */
   @media (max-width: 550px) {
     .standings-table th, .standings-table td { padding: 8px 6px; font-size: 0.8rem; }
@@ -416,6 +440,14 @@ function renderStandings() {
   container.innerHTML = html;
 }
 
+const LEADERS_PAGE_SIZE = 15;
+let _leadersPage = 0;
+
+function goLeadersPage(delta) {
+  _leadersPage += delta;
+  renderStandings();
+}
+
 function renderScoringLeaders() {
   const results = loadResults();
   const leaders = {};
@@ -464,10 +496,17 @@ function renderScoringLeaders() {
   });
   if (sorted.length === 0) return '';
 
+  // Pagination
+  const totalPages = Math.max(1, Math.ceil(sorted.length / LEADERS_PAGE_SIZE));
+  if (_leadersPage >= totalPages) _leadersPage = totalPages - 1;
+  if (_leadersPage < 0) _leadersPage = 0;
+  const pageStart = _leadersPage * LEADERS_PAGE_SIZE;
+
   let html = '<div class="section-label" style="margin-top:28px;">👑 得分王 — Scoring Leaders</div>';
   html += '<table class="standings-table"><thead><tr><th>#</th><th>Player</th><th>Team</th><th class="center">🕳️</th><th class="center">🎯</th><th class="center">🟫</th><th class="center">PTS</th><th class="center">W-L</th></tr></thead><tbody>';
 
-  sorted.slice(0, 15).forEach(([name, s], i) => {
+  sorted.slice(pageStart, pageStart + LEADERS_PAGE_SIZE).forEach(([name, s], idx) => {
+    const i = pageStart + idx;
     const emoji = TEAMS[s.team] ? TEAMS[s.team].emoji : '';
     const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i+1}`;
     const avgPts = (s.pts / (s.games || 1)).toFixed(1);
@@ -504,6 +543,16 @@ function renderScoringLeaders() {
   });
 
   html += '</tbody></table>';
+
+  // Pagination controls
+  if (totalPages > 1) {
+    html += `<div class="pager">
+      <button class="pager-btn" ${_leadersPage === 0 ? 'disabled' : ''} onclick="goLeadersPage(-1)">‹ Prev</button>
+      <span class="pager-info">Page ${_leadersPage + 1} of ${totalPages} &bull; ${sorted.length} players</span>
+      <button class="pager-btn" ${_leadersPage >= totalPages - 1 ? 'disabled' : ''} onclick="goLeadersPage(1)">Next ›</button>
+    </div>`;
+  }
+
   html += '<p style="text-align:center;margin-top:8px;font-size:0.75rem;color:var(--muted);">🕳️ Holes (+3) &bull; 🎯 Leans (+2) &bull; 🟫 Boards (+1) &bull; PTS = Avg per match &bull; M = Matches played<br>Tap a player to see per-match breakdown</p>';
   return html;
 }
