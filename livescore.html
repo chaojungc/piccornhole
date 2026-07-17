@@ -1164,7 +1164,7 @@ function renderScoreboard() {
   } else if (match.overtimeMode) {
     gameLabel = `Game ${match.currentGame} of ${bestOf} — ⚡ OVERTIME`;
   } else {
-    gameLabel = `Game ${match.currentGame} of ${bestOf} — Round ${roundsPlayed + 1}/10`;
+    gameLabel = `Game ${match.currentGame} of ${bestOf} — Round ${roundsPlayed + 1}/20`;
   }
   document.getElementById('sb-game-label').textContent = gameLabel;
 
@@ -1389,6 +1389,28 @@ function endRound() {
   const currentRounds = match.rounds;
   let totalA = currentRounds.reduce((s, r) => s + r.a, 0) + roundA;
   let totalB = currentRounds.reduce((s, r) => s + r.b, 0) + roundB;
+
+  // ── Both teams reached 21 in the same round: void the round & replay ──
+  // Reverse every throw so player stats (and the leaderboard) keep no trace.
+  if (totalA >= 21 && totalB >= 21) {
+    match.actions.forEach(act => {
+      const ps = match.playerStats[act.player];
+      if (ps) {
+        ps.pts -= act.pts;
+        if (act.pts === 3) ps.holes--;
+        else if (act.pts === 2) ps.leans--;
+        else if (act.pts === 1) ps.boards--;
+        else if (act.pts === -1) ps.boards++;
+        else if (act.pts === -2) ps.leans++;
+      }
+    });
+    match.roundScoreA = 0;
+    match.roundScoreB = 0;
+    match.actions = [];
+    renderScoreboard();
+    alert(`Both teams reached 21 in the same round (${totalA}–${totalB}).\nThe round is voided — scores revert to the previous round. Replay it!`);
+    return;
+  }
 
   match.rounds.push({ a: roundA, b: roundB, rawA: roundA, rawB: roundB, throws: [...match.actions] });
   match.roundScoreA = 0;
