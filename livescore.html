@@ -385,7 +385,7 @@
 
   /* ── Mode cards (League / Casual) ── */
   .mode-cards {
-    display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px;
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px;
   }
   .mode-card {
     border: 2px solid var(--border); border-radius: 14px; padding: 14px 10px;
@@ -539,6 +539,9 @@
 
   /* ── Responsive ── */
   @media (max-width: 550px) {
+    .mode-cards { gap: 6px; }
+    .mode-card { padding: 10px 6px; }
+    .mode-card .mc-desc { display: none; }
     .scoreboard-teams { gap: 8px; }
     .sb-score { font-size: 3rem; min-width: 60px; }
     .sb-team-name { font-size: 1.1rem; }
@@ -550,6 +553,8 @@
 <!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
+<!-- Shared playoff logic -->
+<script src="playoff-utils.js"></script>
 </head>
 <body>
 
@@ -569,6 +574,7 @@
   <a href="livescore.html" class="active"><span class="nav-icon">🎯</span> Live Score</a>
   <a href="history.html"><span class="nav-icon">📜</span> Match History</a>
   <a href="leaderboard.html"><span class="nav-icon">🏅</span> Leaderboard</a>
+  <a href="playoffs.html"><span class="nav-icon">🏆</span> Playoffs</a>
   <a href="admin.html"><span class="nav-icon">⚙️</span> Admin</a>
 </nav>
 
@@ -584,6 +590,11 @@
           <div class="mc-icon">🏆</div>
           <div class="mc-title">League Match</div>
           <div class="mc-desc">Official PCL game — result saved</div>
+        </div>
+        <div class="mode-card" id="mode-card-playoff" onclick="selectMode('playoff')">
+          <div class="mc-icon">🥇</div>
+          <div class="mc-title">Playoff Match</div>
+          <div class="mc-desc">Postseason — saved to playoff records</div>
         </div>
         <div class="mode-card" id="mode-card-casual" onclick="selectMode('casual')">
           <div class="mc-icon">🎲</div>
@@ -607,6 +618,18 @@
         <div id="setup-preview"></div>
 
         <button id="start-match-btn" class="start-btn" disabled onclick="startMatch()">START MATCH 🔥</button>
+      </div>
+
+      <!-- Playoff mode -->
+      <div id="mode-playoff" class="mode-section">
+        <label for="playoff-round">Playoff Round</label>
+        <select id="playoff-round" onchange="onPlayoffSetupChange()">
+          <option value="">-- Select round --</option>
+        </select>
+
+        <div id="playoff-preview"></div>
+
+        <button id="start-playoff-btn" class="start-btn" disabled onclick="startPlayoffMatch()">START MATCH 🔥</button>
       </div>
 
       <!-- Casual mode -->
@@ -756,14 +779,21 @@ const db = firebase.database();
 // ══════════════════════════════════════════════
 let _resultsCache = [];
 let _rostersCache = {};
+let _playoffResultsCache = [];
 
 db.ref('results').on('value', (snap) => {
   _resultsCache = snap.val() || [];
   updatePreview();
+  onPlayoffSetupChange();
 });
 
 db.ref('rosters').on('value', (snap) => {
   _rostersCache = snap.val() || {};
+});
+
+db.ref('playoffResults').on('value', (snap) => {
+  _playoffResultsCache = snap.val() || [];
+  onPlayoffSetupChange();
 });
 
 function loadResults() { return _resultsCache; }
@@ -772,6 +802,11 @@ function saveResults(data) {
   db.ref('results').set(data);
 }
 function loadRosters() { return _rostersCache; }
+function loadPlayoffResults() { return _playoffResultsCache; }
+function savePlayoffResults(data) {
+  _playoffResultsCache = data;
+  db.ref('playoffResults').set(data);
+}
 
 // ══════════════════════════════════════════════
 //  MODE SELECTION
@@ -926,9 +961,104 @@ function updatePreview() {
 }
 
 // ══════════════════════════════════════════════
+//  PLAYOFF SETUP
+// ══════════════════════════════════════════════
+function populatePlayoffRounds() {
+  const sel = document.getElementById('playoff-round');
+  PLAYOFF_ROUNDS.forEach(r => {
+    const opt = document.createElement('option');
+    opt.value = r.id;
+    opt.textContent = r.label;
+    sel.appendChild(opt);
+  });
+}
+
+function onPlayoffSetupChange() {
+  const sel = document.getElementById('playoff-round');
+  if (!sel) return;
+  const roundId = sel.value;
+  const preview = document.getElementById('playoff-preview');
+  const btn = document.getElementById('start-playoff-btn');
+
+  if (!roundId) {
+    preview.innerHTML = '';
+    btn.disabled = true;
+    return;
+  }
+
+  const seeds = computeSeeds(loadResults(), Object.keys(TEAMS));
+  const [tA, tB] = resolvePlayoffTeams(roundId, seeds, loadPlayoffResults());
+
+  if (!tA || !tB) {
+    preview.innerHTML = '<div class="matchup-preview" style="border-color:var(--accent2);">⏳ Matchup not determined yet.<br><small style="color:var(--muted);">The Final needs all 3 循環賽 matches finished first.</small></div>';
+    btn.disabled = true;
+    return;
+  }
+
+  const existing = loadPlayoffResults().find(r => r.round === roundId);
+  const bestOf = roundId === 'final' ? FINAL_BEST_OF : 3;
+  if (existing) {
+    preview.innerHTML = `<div class="matchup-preview" style="border-color:var(--accent3);">✅ This playoff match already has a result: <strong>${TEAMS[existing.teamA].emoji} ${TEAMS[existing.teamA].name} ${existing.winsA}–${existing.winsB} ${TEAMS[existing.teamB].emoji} ${TEAMS[existing.teamB].name}</strong><br><small style="color:var(--muted);">Starting a new match will overwrite the previous result.</small></div>`;
+  } else {
+    preview.innerHTML = `<div class="matchup-preview"><strong>${TEAMS[tA].emoji} ${TEAMS[tA].name}</strong> vs <strong>${TEAMS[tB].emoji} ${TEAMS[tB].name}</strong><br><small style="color:var(--muted);">Playoffs &bull; Best of ${bestOf} &bull; First to 21 per game</small></div>`;
+  }
+  btn.disabled = false;
+}
+
+function startPlayoffMatch() {
+  const roundId = document.getElementById('playoff-round').value;
+  const round = PLAYOFF_ROUNDS.find(r => r.id === roundId);
+  if (!round) return;
+
+  const seeds = computeSeeds(loadResults(), Object.keys(TEAMS));
+  const [tA, tB] = resolvePlayoffTeams(roundId, seeds, loadPlayoffResults());
+  if (!tA || !tB) return;
+
+  const playersA = getPlayersForTeam(tA, 'playoff');
+  const playersB = getPlayersForTeam(tB, 'playoff');
+
+  match = {
+    casual: false,
+    playoff: true,
+    round: roundId,
+    roundLabel: round.label,
+    week: null,
+    gameSlot: null,
+    teamA: tA,
+    teamB: tB,
+    teamAInfo: { emoji: TEAMS[tA].emoji, name: TEAMS[tA].name },
+    teamBInfo: { emoji: TEAMS[tB].emoji, name: TEAMS[tB].name },
+    playersA,
+    playersB,
+    playerStats: { ...initPlayerStats(playersA), ...initPlayerStats(playersB) },
+    currentGame: 1,
+    games: [],
+    winsA: 0,
+    winsB: 0,
+    roundScoreA: 0,
+    roundScoreB: 0,
+    actions: [],
+    rounds: [],
+    matchOver: false,
+    overtimeMode: false
+  };
+
+  document.getElementById('setup-phase').style.display = 'none';
+  document.getElementById('scoring-phase').style.display = 'block';
+  renderScoreboard();
+}
+
+// ══════════════════════════════════════════════
 //  LIVE MATCH STATE
 // ══════════════════════════════════════════════
 let match = null;
+
+// Series length helpers (final may be a different best-of)
+function matchBestOf() {
+  return (match && match.playoff && match.round === 'final') ? FINAL_BEST_OF : 3;
+}
+function winsNeeded() { return Math.ceil(matchBestOf() / 2); }
+function seriesOver() { return match.winsA >= winsNeeded() || match.winsB >= winsNeeded(); }
 
 function getPlayersForTeam(teamName, week) {
   const rosters = loadRosters();
@@ -1022,15 +1152,18 @@ function renderScoreboard() {
 
   document.getElementById('sb-match-info').textContent = match.casual
     ? 'Casual Game'
+    : match.playoff
+    ? `🥇 PLAYOFFS — ${match.roundLabel}`
     : `Week ${match.week} — ${SCHEDULE[match.week-1].date}`;
   const roundsPlayed = match.rounds.length;
+  const bestOf = matchBestOf();
   let gameLabel;
   if (match.matchOver) {
     gameLabel = 'MATCH COMPLETE';
   } else if (match.overtimeMode) {
-    gameLabel = `Game ${match.currentGame} of 3 — ⚡ OVERTIME`;
+    gameLabel = `Game ${match.currentGame} of ${bestOf} — ⚡ OVERTIME`;
   } else {
-    gameLabel = `Game ${match.currentGame} of 3 — Round ${roundsPlayed + 1}/10`;
+    gameLabel = `Game ${match.currentGame} of ${bestOf} — Round ${roundsPlayed + 1}/10`;
   }
   document.getElementById('sb-game-label').textContent = gameLabel;
 
@@ -1046,7 +1179,7 @@ function renderScoreboard() {
 
   // Series tracker dots
   let dotsHtml = '';
-  for (let i = 1; i <= 3; i++) {
+  for (let i = 1; i <= bestOf; i++) {
     const gameResult = match.games[i-1];
     let cls = '';
     let label = i;
@@ -1232,7 +1365,7 @@ function endGameEarly() {
     match.rounds = [];
     match.overtimeMode = false;
 
-    if (match.winsA >= 2 || match.winsB >= 2) {
+    if (seriesOver()) {
       match.matchOver = true;
       saveMatchResult();
     } else {
@@ -1278,7 +1411,7 @@ function endRound() {
     match.rounds = [];
     match.overtimeMode = false;
 
-    if (match.winsA >= 2 || match.winsB >= 2) {
+    if (seriesOver()) {
       match.matchOver = true;
       saveMatchResult();
     } else {
@@ -1300,7 +1433,7 @@ function endRound() {
       match.rounds = [];
       match.overtimeMode = false;
 
-      if (match.winsA >= 2 || match.winsB >= 2) {
+      if (seriesOver()) {
         match.matchOver = true;
         saveMatchResult();
       } else {
@@ -1317,7 +1450,6 @@ function endRound() {
 
 function saveMatchResult() {
   if (!match || match.casual) return; // casual games are not saved
-  const results = loadResults();
 
   const gameScores = match.games.map(g => ({ scoreA: g.scoreA, scoreB: g.scoreB, winner: g.winner, rounds: g.rounds }));
 
@@ -1326,6 +1458,30 @@ function saveMatchResult() {
     if (match.playerStats[p]) playerStats[p] = { ...match.playerStats[p] };
   });
 
+  if (match.playoff) {
+    // Playoff matches go to a separate node — never touch regular-season results
+    const results = loadPlayoffResults();
+    const idx = results.findIndex(r => r.round === match.round);
+    const result = {
+      round: match.round,
+      roundLabel: match.roundLabel,
+      teamA: match.teamA,
+      teamB: match.teamB,
+      winsA: match.winsA,
+      winsB: match.winsB,
+      gameScores,
+      playersA: match.playersA,
+      playersB: match.playersB,
+      playerStats,
+      timestamp: new Date().toISOString()
+    };
+    if (idx >= 0) results[idx] = result;
+    else results.push(result);
+    savePlayoffResults(results);
+    return;
+  }
+
+  const results = loadResults();
   const idx = results.findIndex(r => r.week === match.week && r.gameSlot === match.gameSlot);
   const result = {
     week: match.week,
@@ -1361,6 +1517,10 @@ function abandonMatch() {
   document.getElementById('score-game').innerHTML = '<option value="">-- Select game --</option>';
   document.getElementById('setup-preview').innerHTML = '';
   document.getElementById('start-match-btn').disabled = true;
+  // Reset playoff selectors
+  document.getElementById('playoff-round').value = '';
+  document.getElementById('playoff-preview').innerHTML = '';
+  document.getElementById('start-playoff-btn').disabled = true;
   // Reset casual fields
   casualPlayers.a = [];
   casualPlayers.b = [];
@@ -1374,6 +1534,7 @@ function abandonMatch() {
 //  INIT
 // ══════════════════════════════════════════════
 populateWeeks();
+populatePlayoffRounds();
 renderCasualPills('a');
 renderCasualPills('b');
 
