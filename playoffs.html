@@ -282,6 +282,33 @@
     gap: 16px;
     flex-wrap: wrap;
   }
+  .mc-rosters {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: 10px;
+    padding-top: 8px;
+    border-top: 1px dashed #e8dcc8;
+    font-size: 0.8rem;
+    color: #555;
+  }
+  .mc-roster-side { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+  .mc-roster-side.right { text-align: right; }
+  .start-match-link {
+    display: block;
+    margin-top: 12px;
+    text-align: center;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: white;
+    font-weight: 700;
+    font-size: 0.9rem;
+    letter-spacing: 1px;
+    padding: 10px;
+    border-radius: 10px;
+    text-decoration: none;
+    transition: opacity 0.15s;
+  }
+  .start-match-link:hover { opacity: 0.9; }
 
   /* ── Expandable player rows ── */
   .player-row { cursor: pointer; user-select: none; }
@@ -426,6 +453,7 @@ const db = firebase.database();
 
 let _resultsCache = [];
 let _playoffResultsCache = [];
+let _rostersCache = {};
 
 db.ref('results').on('value', (snap) => {
   _resultsCache = snap.val() || [];
@@ -433,6 +461,10 @@ db.ref('results').on('value', (snap) => {
 });
 db.ref('playoffResults').on('value', (snap) => {
   _playoffResultsCache = snap.val() || [];
+  render();
+});
+db.ref('rosters').on('value', (snap) => {
+  _rostersCache = snap.val() || {};
   render();
 });
 
@@ -536,6 +568,26 @@ function render() {
         <div class="mc-team right">${teamLabel(tB)}</div>
       </div>
       <div class="mc-pending">${isFinal && !tB ? 'Waiting for 循環賽 winner' : `Scheduled — ${round.date}`}</div>`;
+
+      // Rosters (hidden until both teams submit, same rule as roster page)
+      if (tA && tB) {
+        const rA = _rostersCache[`playoff_${round.id}_${tA}`];
+        const rB = _rostersCache[`playoff_${round.id}_${tB}`];
+        if (rA || rB) {
+          html += '<div class="mc-rosters">';
+          if (rA && rB) {
+            html += `<div class="mc-roster-side">${rA.players.map(p => `<span>${p}</span>`).join('')}</div>`;
+            html += `<div class="mc-roster-vs"></div>`;
+            html += `<div class="mc-roster-side right">${rB.players.map(p => `<span>${p}</span>`).join('')}</div>`;
+          } else {
+            html += `<div class="mc-roster-side">${rA ? '🔒 Roster in' : '⏳ No roster'}</div>`;
+            html += `<div class="mc-roster-vs"></div>`;
+            html += `<div class="mc-roster-side right">${rB ? '🔒 Roster in' : '⏳ No roster'}</div>`;
+          }
+          html += '</div>';
+        }
+        html += `<a class="start-match-link" href="livescore.html?playoff=${round.id}">▶ START MATCH</a>`;
+      }
     }
     html += '</div>';
   });

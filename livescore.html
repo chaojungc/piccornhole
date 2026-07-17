@@ -1544,6 +1544,14 @@ renderCasualPills('b');
   const params = new URLSearchParams(window.location.search);
   const week = params.get('week');
   const game = params.get('game');
+  const playoff = params.get('playoff');
+
+  if (playoff && PLAYOFF_ROUNDS.some(r => r.id === playoff)) {
+    selectMode('playoff');
+    document.getElementById('playoff-round').value = playoff;
+    onPlayoffSetupChange();
+    return;
+  }
 
   if (week) {
     const weekSel = document.getElementById('score-week');
